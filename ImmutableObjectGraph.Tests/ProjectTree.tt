@@ -23,7 +23,7 @@
 		bool visible;
 		IRule browseObjectProperties;
 		ImmutableHashSet<string> capabilities;
-		ImmutableSortedSet<ProjectTree> children;
+		ImmutableList<ProjectTree> children;
 	}
 
 	class ProjectItemTree : ProjectTree {

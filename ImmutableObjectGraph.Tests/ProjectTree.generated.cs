@@ -21,10 +21,10 @@ namespace ImmutableObjectGraph.Tests {
 		System.Boolean Visible { get; }
 		Microsoft.VisualStudio.ProjectSystem.Properties.IRule BrowseObjectProperties { get; }
 		System.Collections.Immutable.ImmutableHashSet<System.String> Capabilities { get; }
-		System.Collections.Immutable.ImmutableSortedSet<ProjectTree> Children { get; }
+		System.Collections.Immutable.ImmutableList<ProjectTree> Children { get; }
 	}
 	
-	public partial class ProjectTree : IProjectTree, System.Collections.Generic.IEnumerable<ProjectTree>, IRecursiveParentWithSortedChildren, IRecursiveType, IRecursiveDiffingType<ProjectTreeChangedProperties, ProjectTree.DiffGram> {
+	public partial class ProjectTree : IProjectTree, System.Collections.Generic.IEnumerable<ProjectTree>, IRecursiveParentWithOrderedChildren, IRecursiveType, IRecursiveDiffingType<ProjectTreeChangedProperties, ProjectTree.DiffGram> {
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private static readonly ProjectTree DefaultInstance = GetDefaultTemplate();
 		
@@ -53,7 +53,7 @@ namespace ImmutableObjectGraph.Tests {
 		private readonly System.Collections.Immutable.ImmutableHashSet<System.String> capabilities;
 	
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private readonly System.Collections.Immutable.ImmutableSortedSet<ProjectTree> children;
+		private readonly System.Collections.Immutable.ImmutableList<ProjectTree> children;
 	
 		private readonly System.Int32 identity;
 	
@@ -67,7 +67,7 @@ namespace ImmutableObjectGraph.Tests {
 			System.Boolean visible,
 			Microsoft.VisualStudio.ProjectSystem.Properties.IRule browseObjectProperties,
 			System.Collections.Immutable.ImmutableHashSet<System.String> capabilities,
-			System.Collections.Immutable.ImmutableSortedSet<ProjectTree> children,
+			System.Collections.Immutable.ImmutableList<ProjectTree> children,
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableDictionary<System.Int32, System.Collections.Generic.KeyValuePair<ProjectTree, System.Int32>>> lookupTable = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableDictionary<System.Int32, System.Collections.Generic.KeyValuePair<ProjectTree, System.Int32>>>),
 			ImmutableObjectGraph.Optional<bool> skipValidation = default(ImmutableObjectGraph.Optional<bool>))
 		{
@@ -94,7 +94,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>)) {
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>)) {
 			var identity = Optional.For(NewIdentity());
 			return DefaultInstance.WithFactory(
 				caption: Optional.For(caption),
@@ -136,7 +136,7 @@ namespace ImmutableObjectGraph.Tests {
 			get { return this.capabilities; }
 		}
 	
-		public System.Collections.Immutable.ImmutableSortedSet<ProjectTree> Children {
+		public System.Collections.Immutable.ImmutableList<ProjectTree> Children {
 			get { return this.children; }
 		}
 		
@@ -250,7 +250,7 @@ namespace ImmutableObjectGraph.Tests {
 		
 		
 		/// <summary>Returns a new instance with the Children property set to the specified value.</summary>
-		public ProjectTree WithChildren(System.Collections.Immutable.ImmutableSortedSet<ProjectTree> value) {
+		public ProjectTree WithChildren(System.Collections.Immutable.ImmutableList<ProjectTree> value) {
 			if (value == this.Children) {
 				return this;
 			}
@@ -313,7 +313,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>)) {
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>)) {
 			return (ProjectTree)this.WithCore(
 				caption: caption,
 				filePath: filePath,
@@ -334,7 +334,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>)) {
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>)) {
 			var identity = default(ImmutableObjectGraph.Optional<System.Int32>);
 			return this.WithFactory(
 				caption: Optional.For(caption.GetValueOrDefault(this.Caption)),
@@ -357,7 +357,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 			ImmutableObjectGraph.Optional<System.Int32> identity = default(ImmutableObjectGraph.Optional<System.Int32>)) {
 			if (
 				(identity.IsDefined && identity.Value != this.Identity) || 
@@ -444,7 +444,7 @@ namespace ImmutableObjectGraph.Tests {
 	
 			internal System.Collections.Immutable.ImmutableHashSet<System.String> Capabilities { get; set; }
 	
-			internal System.Collections.Immutable.ImmutableSortedSet<ProjectTree> Children { get; set; }
+			internal System.Collections.Immutable.ImmutableList<ProjectTree> Children { get; set; }
 		}
 		
 		public RootedProjectTree AsRoot {
@@ -1113,7 +1113,7 @@ namespace ImmutableObjectGraph.Tests {
 				ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 				ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 				ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-				ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+				ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 				ImmutableObjectGraph.Optional<System.Int32> identity = default(ImmutableObjectGraph.Optional<System.Int32>)) {
 			if (!identity.IsDefined) {
 				identity = NewIdentity();
@@ -1189,7 +1189,7 @@ namespace ImmutableObjectGraph.Tests {
 			protected ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>.Builder> capabilities;
 		
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-			protected ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>.Builder> children;
+			protected ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>.Builder> children;
 		
 			internal Builder(ProjectTree immutable) {
 				this.immutable = immutable;
@@ -1276,7 +1276,7 @@ namespace ImmutableObjectGraph.Tests {
 				}
 			}
 		
-			public System.Collections.Immutable.ImmutableSortedSet<ProjectTree>.Builder Children {
+			public System.Collections.Immutable.ImmutableList<ProjectTree>.Builder Children {
 				get {
 					if (!this.children.IsDefined) {
 						this.children = this.immutable.children != null ? this.immutable.children.ToBuilder() : null;
@@ -1316,9 +1316,6 @@ namespace ImmutableObjectGraph.Tests {
 		int IRecursiveParentWithOrderedChildren.IndexOf(IRecursiveType value) {
 			return this.Children.IndexOf((ProjectTree)value);
 		}
-		int IRecursiveParentWithSortedChildren.Compare(IRecursiveType first, IRecursiveType second) {
-			return this.Children.KeyComparer.Compare((ProjectTree)first, (ProjectTree)second);
-		}
 	
 		int IRecursiveType.Identity {
 			get { return this.Identity; }
@@ -1332,12 +1329,12 @@ namespace ImmutableObjectGraph.Tests {
 		private readonly ProjectTree greenNode;
 	
 		private readonly ProjectTree root;
-		private Optional<ImmutableObjectGraph.Adapters.ImmutableSetRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>> children;
+		private Optional<ImmutableObjectGraph.Adapters.ImmutableListRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>> children;
 	
 		internal RootedProjectTree(ProjectTree projectTree, ProjectTree root) {
 			this.greenNode = projectTree;
 			this.root = root;
-			this.children = default(Optional<ImmutableObjectGraph.Adapters.ImmutableSetRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>>);
+			this.children = default(Optional<ImmutableObjectGraph.Adapters.ImmutableListRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>>);
 		}
 	
 		/// <summary>Gets the parent of this object in the hierarchy.</summary>
@@ -1533,7 +1530,7 @@ namespace ImmutableObjectGraph.Tests {
 			return this.NewSpine(mutatedLeaf);
 		}
 	
-		public System.Collections.Immutable.IImmutableSet<RootedProjectTree> Children {
+		public System.Collections.Immutable.IImmutableList<RootedProjectTree> Children {
 			get {
 				if (!this.children.IsDefined) {
 					this.ThrowIfDefault();
@@ -1545,7 +1542,7 @@ namespace ImmutableObjectGraph.Tests {
 		}
 		
 		/// <summary>Returns a new instance with the Children property set to the specified value.</summary>
-		public RootedProjectTree WithChildren(System.Collections.Immutable.IImmutableSet<RootedProjectTree> value) {
+		public RootedProjectTree WithChildren(System.Collections.Immutable.IImmutableList<RootedProjectTree> value) {
 			this.ThrowIfDefault();
 			var adapter = (ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)value;
 			var mutatedLeaf = this.greenNode.WithChildren(adapter.UnderlyingCollection);
@@ -1689,7 +1686,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableSet<RootedProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableSet<RootedProjectTree>>)) {
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableList<RootedProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableList<RootedProjectTree>>)) {
 			this.ThrowIfDefault();
 			var newGreenNode = this.greenNode.With(
 				caption: caption,
@@ -1699,7 +1696,7 @@ namespace ImmutableObjectGraph.Tests {
 				visible: visible,
 				browseObjectProperties: browseObjectProperties,
 				capabilities: capabilities,
-				children: children.IsDefined ? (System.Collections.Immutable.ImmutableSortedSet<ProjectTree>)((ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)children.Value).UnderlyingCollection : default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>));
+				children: children.IsDefined ? (System.Collections.Immutable.ImmutableList<ProjectTree>)((ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)children.Value).UnderlyingCollection : default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>));
 			var newRoot = this.root.ReplaceDescendent(this.greenNode, newGreenNode);
 			return newGreenNode.WithRoot(newRoot);
 		}
@@ -1712,7 +1709,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableSet<RootedProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableSet<RootedProjectTree>>)) {
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableList<RootedProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableList<RootedProjectTree>>)) {
 			var greenNode = ProjectTree.Create(
 				caption: caption,
 				filePath: filePath,
@@ -1721,7 +1718,7 @@ namespace ImmutableObjectGraph.Tests {
 				visible: visible,
 				browseObjectProperties: browseObjectProperties,
 				capabilities: capabilities,
-				children: children.IsDefined ? (System.Collections.Immutable.ImmutableSortedSet<ProjectTree>)((ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)children.Value).UnderlyingCollection : default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>));
+				children: children.IsDefined ? (System.Collections.Immutable.ImmutableList<ProjectTree>)((ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)children.Value).UnderlyingCollection : default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>));
 			return greenNode.AsRoot;
 		}
 	
@@ -1913,7 +1910,7 @@ namespace ImmutableObjectGraph.Tests {
 			System.Boolean visible,
 			Microsoft.VisualStudio.ProjectSystem.Properties.IRule browseObjectProperties,
 			System.Collections.Immutable.ImmutableHashSet<System.String> capabilities,
-			System.Collections.Immutable.ImmutableSortedSet<ProjectTree> children,
+			System.Collections.Immutable.ImmutableList<ProjectTree> children,
 			Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext projectPropertiesContext,
 			Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet propertySheet,
 			System.Boolean isLinked,
@@ -1946,7 +1943,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet> propertySheet = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet>),
 			ImmutableObjectGraph.Optional<System.Boolean> isLinked = default(ImmutableObjectGraph.Optional<System.Boolean>)) {
 			var identity = Optional.For(NewIdentity());
@@ -2059,7 +2056,7 @@ namespace ImmutableObjectGraph.Tests {
 		
 		
 		/// <summary>Returns a new instance with the Children property set to the specified value.</summary>
-		public new ProjectItemTree WithChildren(System.Collections.Immutable.ImmutableSortedSet<ProjectTree> value) {
+		public new ProjectItemTree WithChildren(System.Collections.Immutable.ImmutableList<ProjectTree> value) {
 			return (ProjectItemTree)base.WithChildren(value);
 		}
 		
@@ -2145,7 +2142,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>)) {
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>)) {
 			return this.WithFactory(
 				caption: caption,
 				filePath: filePath,
@@ -2166,7 +2163,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext> projectPropertiesContext = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet> propertySheet = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet>),
 			ImmutableObjectGraph.Optional<System.Boolean> isLinked = default(ImmutableObjectGraph.Optional<System.Boolean>)) {
@@ -2193,7 +2190,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext> projectPropertiesContext = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet> propertySheet = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet>),
 			ImmutableObjectGraph.Optional<System.Boolean> isLinked = default(ImmutableObjectGraph.Optional<System.Boolean>)) {
@@ -2222,7 +2219,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext> projectPropertiesContext = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet> propertySheet = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet>),
 			ImmutableObjectGraph.Optional<System.Boolean> isLinked = default(ImmutableObjectGraph.Optional<System.Boolean>),
@@ -2302,7 +2299,7 @@ namespace ImmutableObjectGraph.Tests {
 	
 			internal System.Collections.Immutable.ImmutableHashSet<System.String> Capabilities { get; set; }
 	
-			internal System.Collections.Immutable.ImmutableSortedSet<ProjectTree> Children { get; set; }
+			internal System.Collections.Immutable.ImmutableList<ProjectTree> Children { get; set; }
 	
 			internal Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext ProjectPropertiesContext { get; set; }
 	
@@ -2354,7 +2351,7 @@ namespace ImmutableObjectGraph.Tests {
 				ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 				ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 				ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-				ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+				ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 				ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet> propertySheet = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet>),
 				ImmutableObjectGraph.Optional<System.Boolean> isLinked = default(ImmutableObjectGraph.Optional<System.Boolean>),
 				ImmutableObjectGraph.Optional<System.Int32> identity = default(ImmutableObjectGraph.Optional<System.Int32>)) {
@@ -2471,12 +2468,12 @@ namespace ImmutableObjectGraph.Tests {
 		private readonly ProjectItemTree greenNode;
 	
 		private readonly ProjectTree root;
-		private Optional<ImmutableObjectGraph.Adapters.ImmutableSetRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>> children;
+		private Optional<ImmutableObjectGraph.Adapters.ImmutableListRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>> children;
 	
 		internal RootedProjectItemTree(ProjectItemTree projectItemTree, ProjectTree root) {
 			this.greenNode = projectItemTree;
 			this.root = root;
-			this.children = default(Optional<ImmutableObjectGraph.Adapters.ImmutableSetRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>>);
+			this.children = default(Optional<ImmutableObjectGraph.Adapters.ImmutableListRootAdapter<ProjectTree, RootedProjectTree, ProjectTree>>);
 		}
 	
 		/// <summary>Gets the parent of this object in the hierarchy.</summary>
@@ -2664,7 +2661,7 @@ namespace ImmutableObjectGraph.Tests {
 			return this.NewSpine(mutatedLeaf);
 		}
 	
-		public System.Collections.Immutable.IImmutableSet<RootedProjectTree> Children {
+		public System.Collections.Immutable.IImmutableList<RootedProjectTree> Children {
 			get {
 				if (!this.children.IsDefined) {
 					this.ThrowIfDefault();
@@ -2676,7 +2673,7 @@ namespace ImmutableObjectGraph.Tests {
 		}
 		
 		/// <summary>Returns a new instance with the Children property set to the specified value.</summary>
-		public RootedProjectItemTree WithChildren(System.Collections.Immutable.IImmutableSet<RootedProjectTree> value) {
+		public RootedProjectItemTree WithChildren(System.Collections.Immutable.IImmutableList<RootedProjectTree> value) {
 			this.ThrowIfDefault();
 			var adapter = (ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)value;
 			var mutatedLeaf = this.greenNode.WithChildren(adapter.UnderlyingCollection);
@@ -2862,7 +2859,7 @@ namespace ImmutableObjectGraph.Tests {
 			ImmutableObjectGraph.Optional<System.Boolean> visible = default(ImmutableObjectGraph.Optional<System.Boolean>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule> browseObjectProperties = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IRule>),
 			ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>> capabilities = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableHashSet<System.String>>),
-			ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableSet<RootedProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableSet<RootedProjectTree>>),
+			ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableList<RootedProjectTree>> children = default(ImmutableObjectGraph.Optional<System.Collections.Immutable.IImmutableList<RootedProjectTree>>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext> projectPropertiesContext = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IProjectPropertiesContext>),
 			ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet> propertySheet = default(ImmutableObjectGraph.Optional<Microsoft.VisualStudio.ProjectSystem.Properties.IPropertySheet>),
 			ImmutableObjectGraph.Optional<System.Boolean> isLinked = default(ImmutableObjectGraph.Optional<System.Boolean>)) {
@@ -2875,7 +2872,7 @@ namespace ImmutableObjectGraph.Tests {
 				visible: visible,
 				browseObjectProperties: browseObjectProperties,
 				capabilities: capabilities,
-				children: children.IsDefined ? (System.Collections.Immutable.ImmutableSortedSet<ProjectTree>)((ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)children.Value).UnderlyingCollection : default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableSortedSet<ProjectTree>>),
+				children: children.IsDefined ? (System.Collections.Immutable.ImmutableList<ProjectTree>)((ImmutableObjectGraph.Adapters.IImmutableCollectionAdapter<ProjectTree>)children.Value).UnderlyingCollection : default(ImmutableObjectGraph.Optional<System.Collections.Immutable.ImmutableList<ProjectTree>>),
 				projectPropertiesContext: projectPropertiesContext,
 				propertySheet: propertySheet,
 				isLinked: isLinked);
