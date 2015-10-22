@@ -113,7 +113,7 @@
                             continue;
                         }
 
-                        string outputFilePath = Path.Combine(this.IntermediateOutputDirectory, Path.GetFileNameWithoutExtension(inputDocument.Name) + ".generated.cs");
+                        string outputFilePath = Path.Combine(this.IntermediateOutputDirectory, Path.GetDirectoryName(inputDocument.Name), Path.GetFileNameWithoutExtension(inputDocument.Name) + ".generated.cs");
 
                         // Code generation is relatively fast, but it's not free.
                         // And when we run the Simplifier.ReduceAsync it's dog slow.
@@ -131,6 +131,7 @@
                             if (!CSharpDeclarationComputer.GetDeclarationsInSpan(semanticModel, TextSpan.FromBounds(0, semanticModel.SyntaxTree.Length), false, this.CancellationToken).IsEmpty)
                             {
                                 var outputText = await outputDocument.GetTextAsync(this.CancellationToken);
+                                Directory.CreateDirectory(Path.GetDirectoryName(outputFilePath));
                                 using (var outputFileStream = File.OpenWrite(outputFilePath))
                                 using (var outputWriter = new StreamWriter(outputFileStream))
                                 {
