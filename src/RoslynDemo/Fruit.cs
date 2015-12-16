@@ -5,7 +5,7 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using ImmutableObjectGraph.CodeGeneration;
+    using ImmutableObjectGraph;
 
     [GenerateImmutable]
     partial class Fruit
