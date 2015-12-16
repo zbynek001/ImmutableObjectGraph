@@ -39,6 +39,7 @@
         private static readonly IdentifierNameSyntax WithMethodName = SyntaxFactory.IdentifierName("With");
         private static readonly IdentifierNameSyntax WithCoreMethodName = SyntaxFactory.IdentifierName("WithCore");
         private static readonly IdentifierNameSyntax LastIdentityProducedFieldName = SyntaxFactory.IdentifierName("lastIdentityProduced");
+        private static readonly IdentifierNameSyntax InitializeMethodName = SyntaxFactory.IdentifierName("Initialize");
         private static readonly IdentifierNameSyntax ValidateMethodName = SyntaxFactory.IdentifierName("Validate");
         private static readonly IdentifierNameSyntax SkipValidationParameterName = SyntaxFactory.IdentifierName("skipValidation");
         private static readonly AttributeSyntax DebuggerBrowsableNeverAttribute = SyntaxFactory.Attribute(
@@ -138,6 +139,13 @@
                 innerMembers.Add(CreateGetDefaultTemplateMethod());
                 innerMembers.Add(CreateCreateDefaultTemplatePartialMethod());
                 innerMembers.Add(CreateTemplateStruct());
+                //innerMembers.Add(CreateInitializeMethod());
+                //innerMembers.Add(CreateValidateMethod());
+            }
+
+            innerMembers.Add(CreateInitializeMethod());
+
+            if (!isAbstract) {
                 innerMembers.Add(CreateValidateMethod());
             }
 
@@ -353,6 +361,14 @@
                                 IdentityParameterName))));
             }
 
+            body = body.AddStatements(
+                // this.Initialize();
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        Syntax.ThisDot(InitializeMethodName),
+                        SyntaxFactory.ArgumentList())));
+
+
             if (!this.isAbstract)
             {
                 body = body.AddStatements(
@@ -562,6 +578,18 @@
             }
 
             return method;
+        }
+
+        private MethodDeclarationSyntax CreateInitializeMethod()
+        {
+            //// /// <summary>Normalizes and/or validates all properties on this object.</summary>
+            //// /// <exception type="ArgumentException">Thrown if any properties have disallowed values.</exception>
+            //// partial void Initializa();
+            return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                InitializeMethodName.Identifier)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
 
         private MethodDeclarationSyntax CreateValidateMethod()
