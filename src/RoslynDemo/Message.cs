@@ -7,7 +7,7 @@
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-    using ImmutableObjectGraph;
+    using ImmutableObjectGraph.Generation;
 
     [GenerateImmutable(GenerateBuilder = true)]
     partial class Message
