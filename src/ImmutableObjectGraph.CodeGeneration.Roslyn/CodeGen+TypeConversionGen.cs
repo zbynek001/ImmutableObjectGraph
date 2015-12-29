@@ -35,7 +35,7 @@
 
             protected override void GenerateCore()
             {
-                if (!this.generator.applyToSymbol.IsAbstract && (this.generator.applyToMetaType.HasAncestor || this.generator.applyToMetaType.Descendents.Any()))
+                if (!this.generator.applyToSymbol.IsAbstract /*&& (this.generator.applyToMetaType.HasAncestor || this.generator.applyToMetaType.Descendents.Any())*/)
                 {
                     this.innerMembers.Add(this.CreateCreateWithIdentityMethod());
                 }
