@@ -6,7 +6,7 @@
 	using System.Text;
 	using System.Threading.Tasks;
 	using Validation;
-    using IdentityFieldType = System.UInt32;
+    using IdentityFieldType = System.UInt64;
 
 	public interface IRecursiveType {
         IdentityFieldType Identity { get; }

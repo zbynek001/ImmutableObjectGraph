@@ -22,7 +22,7 @@
     public partial class CodeGen
     {
         private static readonly SyntaxToken NoneToken = SyntaxFactory.Token(SyntaxKind.None);
-        private static readonly TypeSyntax IdentityFieldTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.UIntKeyword));
+        private static readonly TypeSyntax IdentityFieldTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ULongKeyword));
         private static readonly TypeSyntax IdentityFieldOptionalTypeSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(nameof(Optional)), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(IdentityFieldTypeSyntax)));
         private static readonly IdentifierNameSyntax IdentityParameterName = SyntaxFactory.IdentifierName("identity");
         private static readonly IdentifierNameSyntax IdentityPropertyName = SyntaxFactory.IdentifierName("Identity");
@@ -675,7 +675,7 @@
             // /// <summary>The last identity assigned to a created instance.</summary>
             // private static int lastIdentityProduced;
             return SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(
-                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.IntKeyword)),
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword)),
                 SyntaxFactory.SingletonSeparatedList(SyntaxFactory.VariableDeclarator(LastIdentityProducedFieldName.Identifier))))
                 .AddModifiers(
                     SyntaxFactory.Token(SyntaxKind.PrivateKeyword),

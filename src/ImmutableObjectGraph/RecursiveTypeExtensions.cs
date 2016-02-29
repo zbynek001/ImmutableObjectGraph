@@ -9,7 +9,7 @@
     using System.Text;
     using System.Threading.Tasks;
     using Validation;
-    using IdentityFieldType = System.UInt32;
+    using IdentityFieldType = System.UInt64;
 
     public static class RecursiveTypeExtensions
     {
@@ -181,7 +181,7 @@
             }
 
             var fastLookup = parent as IRecursiveParentWithLookupTable<TRecursiveType>;
-            KeyValuePair<IRecursiveType, uint> nodeLookupResult;
+            KeyValuePair<IRecursiveType, ulong> nodeLookupResult;
             if (fastLookup != null && fastLookup.TryLookup(identity, out nodeLookupResult))
             {
                 if (nodeLookupResult.Key != null)
