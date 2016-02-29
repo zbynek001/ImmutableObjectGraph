@@ -30,7 +30,8 @@
         private static readonly ParameterSyntax OptionalIdentityParameter = Syntax.Optional(RequiredIdentityParameter);
         private static readonly ArgumentSyntax OptionalIdentityArgument = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName);
         private static readonly ArgumentSyntax RequiredIdentityArgumentFromProperty = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.ThisDot(IdentityPropertyName));
-        private static readonly IdentifierNameSyntax DefaultInstanceFieldName = SyntaxFactory.IdentifierName("DefaultInstance");
+        private static readonly IdentifierNameSyntax DefaultInstanceFieldName = SyntaxFactory.IdentifierName("defaultInstance");
+        private static readonly IdentifierNameSyntax DefaultInstanceMethodName = SyntaxFactory.IdentifierName("DefaultInstance");
         private static readonly IdentifierNameSyntax GetDefaultTemplateMethodName = SyntaxFactory.IdentifierName("GetDefaultTemplate");
         private static readonly IdentifierNameSyntax varType = SyntaxFactory.IdentifierName("var");
         private static readonly IdentifierNameSyntax NestedTemplateTypeName = SyntaxFactory.IdentifierName("Template");
@@ -144,6 +145,7 @@
 
                 innerMembers.Add(CreateDefaultInstanceField());
                 innerMembers.Add(CreateGetDefaultTemplateMethod());
+                innerMembers.Add(CreateDefaultInstanceMethod());
                 innerMembers.Add(CreateCreateDefaultTemplatePartialMethod());
                 innerMembers.Add(CreateTemplateStruct());
                 //innerMembers.Add(CreateInitializeMethod());
@@ -283,11 +285,12 @@
                      SyntaxFactory.IdentifierName(this.applyTo.Identifier.ValueText),
                      SyntaxFactory.SingletonSeparatedList(
                          SyntaxFactory.VariableDeclarator(DefaultInstanceFieldName.Identifier)
-                             .WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.InvocationExpression(GetDefaultTemplateMethodName, SyntaxFactory.ArgumentList()))))))
+                             //.WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.InvocationExpression(GetDefaultTemplateMethodName, SyntaxFactory.ArgumentList()))))))
+                             .WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList()))))))
                  .WithModifiers(SyntaxFactory.TokenList(
                      SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
-                     SyntaxFactory.Token(SyntaxKind.StaticKeyword),
-                     SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)))
+                     SyntaxFactory.Token(SyntaxKind.StaticKeyword)/*,
+                     SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)*/))
                  .WithAttributeLists(SyntaxFactory.SingletonList(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
                      DebuggerBrowsableNeverAttribute))));
             return field;
@@ -345,6 +348,47 @@
                      SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
                      SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
                 .WithBody(body);
+        }
+
+        private MemberDeclarationSyntax CreateDefaultInstanceMethod()
+        {
+            return SyntaxFactory.MethodDeclaration(SyntaxFactory.IdentifierName(applyTo.Identifier.ValueText), DefaultInstanceMethodName.Identifier)
+                .WithModifiers(SyntaxFactory.TokenList(
+                     SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                     SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
+                .WithBody(
+                    SyntaxFactory.Block(
+
+                        SyntaxFactory.IfStatement(
+                            SyntaxFactory.BinaryExpression(
+                                SyntaxKind.EqualsExpression,
+                                DefaultInstanceFieldName,
+                                SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
+                            ),
+                            SyntaxFactory.LockStatement(
+                                SyntaxFactory.TypeOfExpression(SyntaxFactory.IdentifierName(applyTo.Identifier.ValueText)),
+                                SyntaxFactory.IfStatement(
+                                    SyntaxFactory.BinaryExpression(
+                                        SyntaxKind.EqualsExpression,
+                                        DefaultInstanceFieldName,
+                                        SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
+                                    ),
+                                    SyntaxFactory.ExpressionStatement(
+                                        SyntaxFactory.AssignmentExpression(
+                                            SyntaxKind.SimpleAssignmentExpression,
+                                            DefaultInstanceFieldName,
+                                            SyntaxFactory.InvocationExpression(GetDefaultTemplateMethodName, SyntaxFactory.ArgumentList())
+                                        )
+                                    )
+                                )
+                            )
+
+                        ),
+                        SyntaxFactory.ReturnStatement(
+                            DefaultInstanceFieldName
+                        )
+                    )
+                );
         }
 
         private MemberDeclarationSyntax CreateTemplateStruct()
@@ -617,7 +661,8 @@
                             SyntaxFactory.InvocationExpression(
                                 SyntaxFactory.MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
-                                    DefaultInstanceFieldName,
+                                    //DefaultInstanceFieldName,
+                                    SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList()),
                                     WithFactoryMethodName),
                                 CreateArgumentList(fieldsGroup, ArgSource.OptionalArgumentOrTemplate, asOptional: OptionalStyle.Always)
                                     .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName)))));
@@ -625,7 +670,8 @@
                 else
                 {
                     body = body.AddStatements(
-                        SyntaxFactory.ReturnStatement(DefaultInstanceFieldName));
+                        //SyntaxFactory.ReturnStatement(DefaultInstanceFieldName));
+                        SyntaxFactory.ReturnStatement(SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList())));
                 }
 
                 var method = SyntaxFactory.MethodDeclaration(
@@ -796,7 +842,8 @@
                     case ArgSource.OptionalArgumentOrPropertyExceptWhenRequired:
                         return f.IsRequired ? (ExpressionSyntax)name : Syntax.OptionalGetValueOrDefault(name, Syntax.ThisDot(propertyName));
                     case ArgSource.OptionalArgumentOrTemplate:
-                        return Syntax.OptionalGetValueOrDefault(name, SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstanceFieldName, propertyName));
+                        //return Syntax.OptionalGetValueOrDefault(name, SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstanceFieldName, propertyName));
+                        return Syntax.OptionalGetValueOrDefault(name, SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList()), propertyName));
                     case ArgSource.Missing:
                         return SyntaxFactory.DefaultExpression(Syntax.OptionalOf(GetFullyQualifiedSymbolName(f.Type)));
                     default:

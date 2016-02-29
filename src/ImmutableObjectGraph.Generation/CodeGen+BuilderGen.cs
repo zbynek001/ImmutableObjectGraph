@@ -102,7 +102,8 @@
                     .WithExpressionBody(SyntaxFactory.ArrowExpressionClause(
                         SyntaxFactory.ObjectCreationExpression(
                             BuilderTypeName,
-                            SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(DefaultInstanceFieldName))),
+                            //SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(DefaultInstanceFieldName))),
+                            SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList())))),
                             null)))
                     .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
 
