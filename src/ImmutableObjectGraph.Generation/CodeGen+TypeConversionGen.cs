@@ -21,7 +21,7 @@
     {
         protected class TypeConversionGen : FeatureGenerator
         {
-            private static readonly IdentifierNameSyntax CreateWithIdentityMethodName = SyntaxFactory.IdentifierName("CreateWithIdentity");
+            //private static readonly IdentifierNameSyntax CreateWithIdentityMethodName = SyntaxFactory.IdentifierName("CreateWithIdentity");
 
             public TypeConversionGen(CodeGen generator)
                 : base(generator)
@@ -35,10 +35,10 @@
 
             protected override void GenerateCore()
             {
-                if (!this.generator.applyToSymbol.IsAbstract /*&& (this.generator.applyToMetaType.HasAncestor || this.generator.applyToMetaType.Descendents.Any())*/)
-                {
-                    this.innerMembers.Add(this.CreateCreateWithIdentityMethod());
-                }
+                //if (!this.generator.applyToSymbol.IsAbstract /*&& (this.generator.applyToMetaType.HasAncestor || this.generator.applyToMetaType.Descendents.Any())*/)
+                //{
+                //    this.innerMembers.Add(this.CreateCreateWithIdentityMethod());
+                //}
 
                 if (this.generator.applyToMetaType.HasAncestor && !this.generator.applyToMetaType.Ancestor.TypeSymbol.IsAbstract)
                 {
@@ -69,50 +69,50 @@
                 return SyntaxFactory.IdentifierName("To" + typeName);
             }
 
-            private MemberDeclarationSyntax CreateCreateWithIdentityMethod()
-            {
-                //ExpressionSyntax returnExpression = DefaultInstanceFieldName;
-                ExpressionSyntax returnExpression = SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList());
-                if (this.generator.applyToMetaType.LocalFields.Any())
-                {
-                    returnExpression = SyntaxFactory.InvocationExpression(
-                        SyntaxFactory.MemberAccessExpression(
-                            SyntaxKind.SimpleMemberAccessExpression,
-                            returnExpression,
-                            WithFactoryMethodName),
-                        this.generator.CreateArgumentList(this.generator.applyToMetaType.AllFields, ArgSource.OptionalArgumentOrTemplate, OptionalStyle.Always)
-                            .AddArguments(OptionalIdentityArgument));
-                }
+            //private MemberDeclarationSyntax CreateCreateWithIdentityMethod()
+            //{
+            //    //ExpressionSyntax returnExpression = DefaultInstanceFieldName;
+            //    ExpressionSyntax returnExpression = SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList());
+            //    if (this.generator.applyToMetaType.LocalFields.Any())
+            //    {
+            //        returnExpression = SyntaxFactory.InvocationExpression(
+            //            SyntaxFactory.MemberAccessExpression(
+            //                SyntaxKind.SimpleMemberAccessExpression,
+            //                returnExpression,
+            //                WithFactoryMethodName),
+            //            this.generator.CreateArgumentList(this.generator.applyToMetaType.AllFields, ArgSource.OptionalArgumentOrTemplate, OptionalStyle.Always)
+            //                .AddArguments(OptionalIdentityArgument));
+            //    }
 
-                var method = SyntaxFactory.MethodDeclaration(
-                    this.generator.applyToTypeName,
-                    CreateWithIdentityMethodName.Identifier)
-                    .AddModifiers(
-                        SyntaxFactory.Token(SyntaxKind.InternalKeyword),
-                        SyntaxFactory.Token(SyntaxKind.StaticKeyword))
-                    .WithParameterList(
-                        this.generator.CreateParameterList(
-                            this.generator.applyToMetaType.AllFields,
-                            ParameterStyle.OptionalOrRequired)
-                        .AddParameters(OptionalIdentityParameter))
-                    .WithBody(SyntaxFactory.Block(
-                        SyntaxFactory.IfStatement(
-                            SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, Syntax.OptionalIsDefined(IdentityParameterName)),
-                            SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
-                                SyntaxKind.SimpleAssignmentExpression,
-                                IdentityParameterName,
-                                SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))),
-                        SyntaxFactory.ReturnStatement(returnExpression)));
+            //    var method = SyntaxFactory.MethodDeclaration(
+            //        this.generator.applyToTypeName,
+            //        CreateMethodName.Identifier)
+            //        .AddModifiers(
+            //            SyntaxFactory.Token(SyntaxKind.InternalKeyword),
+            //            SyntaxFactory.Token(SyntaxKind.StaticKeyword))
+            //        .WithParameterList(
+            //            this.generator.CreateParameterList(
+            //                this.generator.applyToMetaType.AllFields,
+            //                ParameterStyle.OptionalOrRequired)
+            //            .AddParameters(OptionalIdentityParameter))
+            //        .WithBody(SyntaxFactory.Block(
+            //            SyntaxFactory.IfStatement(
+            //                SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, Syntax.OptionalIsDefined(IdentityParameterName)),
+            //                SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
+            //                    SyntaxKind.SimpleAssignmentExpression,
+            //                    IdentityParameterName,
+            //                    SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))),
+            //            SyntaxFactory.ReturnStatement(returnExpression)));
 
-                // BUG: the condition should be if there are local fields on *any* ancestor
-                // from the closest non-abstract ancestor (exclusive) to this type (inclusive).
-                if (!this.generator.applyToMetaType.LocalFields.Any() && this.generator.applyToMetaType.Ancestors.Any(a => !a.TypeSymbol.IsAbstract))
-                {
-                    method = Syntax.AddNewKeyword(method);
-                }
+            //    // BUG: the condition should be if there are local fields on *any* ancestor
+            //    // from the closest non-abstract ancestor (exclusive) to this type (inclusive).
+            //    if (!this.generator.applyToMetaType.LocalFields.Any() && this.generator.applyToMetaType.Ancestors.Any(a => !a.TypeSymbol.IsAbstract))
+            //    {
+            //        method = Syntax.AddNewKeyword(method);
+            //    }
 
-                return method;
-            }
+            //    return method;
+            //}
 
             private MemberDeclarationSyntax CreateToAncestorTypeMethod()
             {
@@ -128,9 +128,10 @@
                                 SyntaxFactory.MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     ancestorType,
-                                    CreateWithIdentityMethodName),
+                                    /*CreateMethodName*/
+                                    GetGenerationalMethodName(CreateMethodName, generator.applyToMetaType.MaxGeneration)),
                                 this.generator.CreateArgumentList(ancestor.AllFields, asOptional: OptionalStyle.WhenNotRequired)
-                                    .AddArguments(RequiredIdentityArgumentFromProperty)))));
+                                    /*.AddArguments(RequiredIdentityArgumentFromProperty)*/))));
             }
 
             private MemberDeclarationSyntax CreateToDerivedTypeMethod(MetaType derivedType)
@@ -217,9 +218,10 @@
                         SyntaxFactory.MemberAccessExpression(
                             SyntaxKind.SimpleMemberAccessExpression,
                             derivedTypeName,
-                            CreateWithIdentityMethodName),
+                            /*CreateMethodName*/
+                            GetGenerationalMethodName(CreateMethodName, generator.applyToMetaType.MaxGeneration)),
                         this.generator.CreateArgumentList(this.generator.applyToMetaType.AllFields, asOptional: OptionalStyle.WhenNotRequired)
-                            .AddArguments(RequiredIdentityArgumentFromProperty)
+                            /*.AddArguments(RequiredIdentityArgumentFromProperty)*/
                             .AddArguments(this.generator.CreateArgumentList(fieldsBeyond, ArgSource.Argument).Arguments.ToArray()))));
 
                 return SyntaxFactory.MethodDeclaration(

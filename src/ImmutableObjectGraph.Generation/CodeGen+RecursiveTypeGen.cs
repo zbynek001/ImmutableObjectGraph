@@ -33,18 +33,18 @@
 
             protected override void GenerateCore()
             {
-                this.baseTypes.Add(SyntaxFactory.SimpleBaseType(Syntax.GetTypeSyntax(typeof(IRecursiveType))));
+                //this.baseTypes.Add(SyntaxFactory.SimpleBaseType(Syntax.GetTypeSyntax(typeof(IRecursiveType))));
 
-                //// uint IRecursiveType.Identity => this.Identity;
-                this.innerMembers.Add(SyntaxFactory.PropertyDeclaration(
-                    IdentityFieldTypeSyntax,
-                    nameof(IRecursiveType.Identity))
-                    .WithExplicitInterfaceSpecifier(
-                        SyntaxFactory.ExplicitInterfaceSpecifier(Syntax.GetTypeSyntax(typeof(IRecursiveType))))
-                    .WithExpressionBody(
-                        SyntaxFactory.ArrowExpressionClause(Syntax.ThisDot(IdentityPropertyName)))
-                    .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
-                    .AddAttributeLists(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(DebuggerBrowsableNeverAttribute))));
+                ////// uint IRecursiveType.Identity => this.Identity;
+                //this.innerMembers.Add(SyntaxFactory.PropertyDeclaration(
+                //    IdentityFieldTypeSyntax,
+                //    nameof(IRecursiveType.Identity))
+                //    .WithExplicitInterfaceSpecifier(
+                //        SyntaxFactory.ExplicitInterfaceSpecifier(Syntax.GetTypeSyntax(typeof(IRecursiveType))))
+                //    .WithExpressionBody(
+                //        SyntaxFactory.ArrowExpressionClause(Syntax.ThisDot(IdentityPropertyName)))
+                //    .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                //    .AddAttributeLists(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(DebuggerBrowsableNeverAttribute))));
             }
         }
     }

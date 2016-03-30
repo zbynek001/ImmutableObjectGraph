@@ -15,11 +15,11 @@
 
         public bool GenerateBuilder { get; set; }
 
-        public bool Delta { get; set; }
+        //public bool Delta { get; set; }
 
         public bool DefineInterface { get; set; }
 
-        public bool DefineRootedStruct { get; set; }
+        //public bool DefineRootedStruct { get; set; }
 
         public bool DefineWithMethodsPerProperty { get; set; }
     }

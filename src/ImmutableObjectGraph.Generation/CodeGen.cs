@@ -23,13 +23,13 @@
     {
         private static readonly SyntaxToken NoneToken = SyntaxFactory.Token(SyntaxKind.None);
         private static readonly TypeSyntax IdentityFieldTypeSyntax = SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.ULongKeyword));
-        private static readonly TypeSyntax IdentityFieldOptionalTypeSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(nameof(Optional)), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(IdentityFieldTypeSyntax)));
+        //private static readonly TypeSyntax IdentityFieldOptionalTypeSyntax = SyntaxFactory.GenericName(SyntaxFactory.Identifier(nameof(Optional)), SyntaxFactory.TypeArgumentList(SyntaxFactory.SingletonSeparatedList(IdentityFieldTypeSyntax)));
         private static readonly IdentifierNameSyntax IdentityParameterName = SyntaxFactory.IdentifierName("identity");
         private static readonly IdentifierNameSyntax IdentityPropertyName = SyntaxFactory.IdentifierName("Identity");
         private static readonly ParameterSyntax RequiredIdentityParameter = SyntaxFactory.Parameter(IdentityParameterName.Identifier).WithType(IdentityFieldTypeSyntax);
-        private static readonly ParameterSyntax OptionalIdentityParameter = Syntax.Optional(RequiredIdentityParameter);
-        private static readonly ArgumentSyntax OptionalIdentityArgument = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName);
-        private static readonly ArgumentSyntax RequiredIdentityArgumentFromProperty = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.ThisDot(IdentityPropertyName));
+        //private static readonly ParameterSyntax OptionalIdentityParameter = Syntax.Optional(RequiredIdentityParameter);
+        //private static readonly ArgumentSyntax OptionalIdentityArgument = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName);
+        //private static readonly ArgumentSyntax RequiredIdentityArgumentFromProperty = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.ThisDot(IdentityPropertyName));
         private static readonly IdentifierNameSyntax DefaultInstanceFieldName = SyntaxFactory.IdentifierName("defaultInstance");
         private static readonly IdentifierNameSyntax DefaultInstanceMethodName = SyntaxFactory.IdentifierName("DefaultInstance");
         private static readonly IdentifierNameSyntax GetDefaultTemplateMethodName = SyntaxFactory.IdentifierName("GetDefaultTemplate");
@@ -37,11 +37,11 @@
         private static readonly IdentifierNameSyntax NestedTemplateTypeName = SyntaxFactory.IdentifierName("Template");
         private static readonly IdentifierNameSyntax CreateDefaultTemplateMethodName = SyntaxFactory.IdentifierName("CreateDefaultTemplate");
         private static readonly IdentifierNameSyntax CreateMethodName = SyntaxFactory.IdentifierName("Create");
-        private static readonly IdentifierNameSyntax NewIdentityMethodName = SyntaxFactory.IdentifierName("NewIdentity");
+        //private static readonly IdentifierNameSyntax NewIdentityMethodName = SyntaxFactory.IdentifierName("NewIdentity");
         private static readonly IdentifierNameSyntax WithFactoryMethodName = SyntaxFactory.IdentifierName("WithFactory");
         private static readonly IdentifierNameSyntax WithMethodName = SyntaxFactory.IdentifierName("With");
         private static readonly IdentifierNameSyntax WithCoreMethodName = SyntaxFactory.IdentifierName("WithCore");
-        private static readonly IdentifierNameSyntax LastIdentityProducedFieldName = SyntaxFactory.IdentifierName("lastIdentityProduced");
+        //private static readonly IdentifierNameSyntax LastIdentityProducedFieldName = SyntaxFactory.IdentifierName("lastIdentityProduced");
         private static readonly IdentifierNameSyntax InitializeMethodName = SyntaxFactory.IdentifierName("Initialize");
         private static readonly IdentifierNameSyntax ValidateMethodName = SyntaxFactory.IdentifierName("Validate");
         private static readonly IdentifierNameSyntax SkipValidationParameterName = SyntaxFactory.IdentifierName("skipValidation");
@@ -121,16 +121,16 @@
 
             ValidateInput();
 
-            this.MergeFeature(new EnumerableRecursiveParentGen(this));
-            this.MergeFeature(new RecursiveTypeGen(this));
+            //this.MergeFeature(new EnumerableRecursiveParentGen(this));
+            //this.MergeFeature(new RecursiveTypeGen(this));
 
             var innerMembers = new List<MemberDeclarationSyntax>();
             if (!this.applyToMetaType.HasAncestor)
             {
-                innerMembers.Add(CreateLastIdentityProducedField());
-                innerMembers.Add(CreateIdentityField());
-                innerMembers.Add(CreateIdentityProperty(this.isSealed));
-                innerMembers.Add(CreateNewIdentityMethod(this.isSealed));
+                //innerMembers.Add(CreateLastIdentityProducedField());
+                //innerMembers.Add(CreateIdentityField());
+                //innerMembers.Add(CreateIdentityProperty(this.isSealed));
+                //innerMembers.Add(CreateNewIdentityMethod(this.isSealed));
             }
 
             innerMembers.AddRange(CreateWithCoreMethods());
@@ -166,14 +166,14 @@
             innerMembers.AddRange(this.GetFieldVariables().Select(fv => CreatePropertyForField(fv.Key, fv.Value)));
 
             this.MergeFeature(new BuilderGen(this));
-            this.MergeFeature(new DeltaGen(this));
-            this.MergeFeature(new RootedStructGen(this));
+            //this.MergeFeature(new DeltaGen(this));
+            //this.MergeFeature(new RootedStructGen(this));
             this.MergeFeature(new InterfacesGen(this));
             this.MergeFeature(new DefineWithMethodsPerPropertyGen(this));
-            this.MergeFeature(new CollectionHelpersGen(this));
+            //this.MergeFeature(new CollectionHelpersGen(this));
             this.MergeFeature(new TypeConversionGen(this));
-            this.MergeFeature(new FastSpineGen(this));
-            this.MergeFeature(new DeepMutationGen(this));
+            //this.MergeFeature(new FastSpineGen(this));
+            //this.MergeFeature(new DeepMutationGen(this));
             this.MergeFeature(new StyleCopCompliance(this));
 
             // Define the constructor after merging all features since they can add to it.
@@ -338,7 +338,7 @@
                         SyntaxFactory.IdentifierName(applyTo.Identifier),
                         SyntaxFactory.ArgumentList(Syntax.JoinSyntaxNodes(
                             SyntaxKind.CommaToken,
-                            ImmutableArray.Create(SyntaxFactory.Argument(SyntaxFactory.DefaultExpression(IdentityFieldTypeSyntax)))
+                            ImmutableArray.Create<ArgumentSyntax>(/*SyntaxFactory.Argument(SyntaxFactory.DefaultExpression(IdentityFieldTypeSyntax))*/)
                                 .AddRange(this.applyToMetaType.AllFields.Select(f => SyntaxFactory.Argument(SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, templateVarName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase())))))
                                 .Add(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression))))),
                         null)));
@@ -428,7 +428,7 @@
                 // This is intended to support deserialization or perhaps one day, the new C# `with`
                 // keyword for record types.
                 var thisArguments = this.CreateArgumentList(this.applyToMetaType.AllFields, ArgSource.ArgumentWithPascalCase)
-                    .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
+                    //.PrependArgument(SyntaxFactory.Argument(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
                     .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), SyntaxFactory.Token(SyntaxKind.None), SyntaxFactory.LiteralExpression(SyntaxKind.FalseLiteralExpression)));
                 var ctor = SyntaxFactory.ConstructorDeclaration(this.applyTo.Identifier)
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
@@ -455,14 +455,14 @@
 
             if (!this.applyToMetaType.HasAncestor)
             {
-                body = body.WithStatements(
-                    body.Statements.Insert(0,
-                        // this.identity = identity;
-                        SyntaxFactory.ExpressionStatement(
-                            SyntaxFactory.AssignmentExpression(
-                                SyntaxKind.SimpleAssignmentExpression,
-                                Syntax.ThisDot(IdentityParameterName),
-                                IdentityParameterName))));
+                //body = body.WithStatements(
+                //    body.Statements.Insert(0,
+                //        // this.identity = identity;
+                //        SyntaxFactory.ExpressionStatement(
+                //            SyntaxFactory.AssignmentExpression(
+                //                SyntaxKind.SimpleAssignmentExpression,
+                //                Syntax.ThisDot(IdentityParameterName),
+                //                IdentityParameterName))));
             }
 
             body = body.AddStatements(
@@ -491,7 +491,7 @@
                 this.applyTo.Identifier)
                 .WithParameterList(
                     CreateParameterList(this.applyToMetaType.AllFields, ParameterStyle.Required)
-                    .PrependParameter(RequiredIdentityParameter)
+                    //.PrependParameter(RequiredIdentityParameter)
                     .AddParameters(SyntaxFactory.Parameter(SkipValidationParameterName.Identifier).WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)))))
                 .WithBody(body);
 
@@ -507,7 +507,7 @@
                     SyntaxFactory.ConstructorInitializer(
                         SyntaxKind.BaseConstructorInitializer,
                         this.CreateArgumentList(this.applyToMetaType.InheritedFields, ArgSource.Argument)
-                            .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName))
+                            //.PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName))
                             .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), NoneToken, SkipValidationParameterName))));
             }
 
@@ -575,7 +575,7 @@
                                 SyntaxFactory.InvocationExpression(
                                     Syntax.ThisDot(WithFactoryMethodName),
                                     this.CreateArgumentList(this.applyToMetaType.AllFields, ArgSource.OptionalArgumentOrProperty, OptionalStyle.Always)
-                                    .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.OptionalFor(Syntax.ThisDot(IdentityPropertyName))))))));
+                                    /*.AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.OptionalFor(Syntax.ThisDot(IdentityPropertyName))))*/))));
                 }
 
                 yield return method;
@@ -616,8 +616,8 @@
                             Syntax.ThisDot(propertyName))));
             Func<MetaField, ExpressionSyntax> isChanged = v => isChangedByNames(v.NameAsProperty, v.NameAsField);
             var anyChangesExpression =
-                new ExpressionSyntax[] { isChangedByNames(IdentityPropertyName, IdentityParameterName) }.Concat(
-                    this.applyToMetaType.AllFields.Select(isChanged))
+                /*new ExpressionSyntax[] { isChangedByNames(IdentityPropertyName, IdentityParameterName) }.Concat(*/
+                    this.applyToMetaType.AllFields.Select(isChanged)/*)*/
                     .ChainBinaryExpressions(SyntaxKind.LogicalOrExpression);
 
             // /// <summary>Returns a new instance of this object with any number of properties changed.</summary>
@@ -626,7 +626,7 @@
                 SyntaxFactory.IdentifierName(this.applyTo.Identifier),
                 WithFactoryMethodName.Identifier)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                .WithParameterList(CreateParameterList(this.applyToMetaType.AllFields, ParameterStyle.Optional).AddParameters(OptionalIdentityParameter))
+                .WithParameterList(CreateParameterList(this.applyToMetaType.AllFields, ParameterStyle.Optional)/*.AddParameters(OptionalIdentityParameter)*/)
                 .WithBody(SyntaxFactory.Block(
                     SyntaxFactory.IfStatement(
                         anyChangesExpression,
@@ -636,7 +636,7 @@
                                 SyntaxFactory.ObjectCreationExpression(
                                     SyntaxFactory.IdentifierName(applyTo.Identifier),
                                     CreateArgumentList(this.applyToMetaType.AllFields, ArgSource.OptionalArgumentOrProperty)
-                                        .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.OptionalGetValueOrDefault(SyntaxFactory.IdentifierName(IdentityParameterName.Identifier), Syntax.ThisDot(IdentityPropertyName))))
+                                        //.PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.OptionalGetValueOrDefault(SyntaxFactory.IdentifierName(IdentityParameterName.Identifier), Syntax.ThisDot(IdentityPropertyName))))
                                         .AddArguments(DoNotSkipValidationArgument),
                                     null))),
                         SyntaxFactory.ElseClause(SyntaxFactory.Block(
@@ -652,11 +652,11 @@
                 {
                     body = body.AddStatements(
                         // var identity = Optional.For(NewIdentity());
-                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactory.VariableDeclaration(
-                            varType,
-                            SyntaxFactory.SingletonSeparatedList(
-                                SyntaxFactory.VariableDeclarator(IdentityParameterName.Identifier)
-                                    .WithInitializer(SyntaxFactory.EqualsValueClause(Syntax.OptionalFor(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList()))))))),
+                        //SyntaxFactory.LocalDeclarationStatement(SyntaxFactory.VariableDeclaration(
+                        //    varType,
+                        //    SyntaxFactory.SingletonSeparatedList(
+                        //        SyntaxFactory.VariableDeclarator(IdentityParameterName.Identifier)
+                        //            .WithInitializer(SyntaxFactory.EqualsValueClause(Syntax.OptionalFor(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList()))))))),
                         SyntaxFactory.ReturnStatement(
                             SyntaxFactory.InvocationExpression(
                                 SyntaxFactory.MemberAccessExpression(
@@ -665,7 +665,7 @@
                                     SyntaxFactory.InvocationExpression(DefaultInstanceMethodName, SyntaxFactory.ArgumentList()),
                                     WithFactoryMethodName),
                                 CreateArgumentList(fieldsGroup, ArgSource.OptionalArgumentOrTemplate, asOptional: OptionalStyle.Always)
-                                    .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName)))));
+                                    /*.AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName))*/)));
                 }
                 else
                 {
@@ -716,71 +716,71 @@
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
 
-        private static MemberDeclarationSyntax CreateLastIdentityProducedField()
-        {
-            // /// <summary>The last identity assigned to a created instance.</summary>
-            // private static int lastIdentityProduced;
-            return SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(
-                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword)),
-                SyntaxFactory.SingletonSeparatedList(SyntaxFactory.VariableDeclarator(LastIdentityProducedFieldName.Identifier))))
-                .AddModifiers(
-                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
-                    SyntaxFactory.Token(SyntaxKind.StaticKeyword));
-        }
+        //private static MemberDeclarationSyntax CreateLastIdentityProducedField()
+        //{
+        //    // /// <summary>The last identity assigned to a created instance.</summary>
+        //    // private static int lastIdentityProduced;
+        //    return SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(
+        //        SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.LongKeyword)),
+        //        SyntaxFactory.SingletonSeparatedList(SyntaxFactory.VariableDeclarator(LastIdentityProducedFieldName.Identifier))))
+        //        .AddModifiers(
+        //            SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+        //            SyntaxFactory.Token(SyntaxKind.StaticKeyword));
+        //}
 
-        private static MemberDeclarationSyntax CreateIdentityField()
-        {
-            return SyntaxFactory.FieldDeclaration(
-                SyntaxFactory.VariableDeclaration(
-                    IdentityFieldTypeSyntax,
-                    SyntaxFactory.SingletonSeparatedList(SyntaxFactory.VariableDeclarator(IdentityParameterName.Identifier))))
-                .AddModifiers(
-                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
-                    SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword))
-                .WithAttributeLists(SyntaxFactory.SingletonList(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
-                     DebuggerBrowsableNeverAttribute))));
-        }
+        //private static MemberDeclarationSyntax CreateIdentityField()
+        //{
+        //    return SyntaxFactory.FieldDeclaration(
+        //        SyntaxFactory.VariableDeclaration(
+        //            IdentityFieldTypeSyntax,
+        //            SyntaxFactory.SingletonSeparatedList(SyntaxFactory.VariableDeclarator(IdentityParameterName.Identifier))))
+        //        .AddModifiers(
+        //            SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+        //            SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword))
+        //        .WithAttributeLists(SyntaxFactory.SingletonList(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
+        //             DebuggerBrowsableNeverAttribute))));
+        //}
 
-        private static MemberDeclarationSyntax CreateIdentityProperty(bool containingTypeIsSealed)
-        {
-            var property = SyntaxFactory.PropertyDeclaration(
-                IdentityFieldTypeSyntax,
-                IdentityPropertyName.Identifier)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.InternalKeyword))
-                .WithExpressionBody(SyntaxFactory.ArrowExpressionClause(
-                    Syntax.ThisDot(IdentityParameterName)))
-                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
-            if (!containingTypeIsSealed)
-                property = property
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
-            return property;
-        }
+        //private static MemberDeclarationSyntax CreateIdentityProperty(bool containingTypeIsSealed)
+        //{
+        //    var property = SyntaxFactory.PropertyDeclaration(
+        //        IdentityFieldTypeSyntax,
+        //        IdentityPropertyName.Identifier)
+        //        .AddModifiers(SyntaxFactory.Token(SyntaxKind.InternalKeyword))
+        //        .WithExpressionBody(SyntaxFactory.ArrowExpressionClause(
+        //            Syntax.ThisDot(IdentityParameterName)))
+        //        .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        //    if (!containingTypeIsSealed)
+        //        property = property
+        //            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
+        //    return property;
+        //}
 
-        private static MemberDeclarationSyntax CreateNewIdentityMethod(bool containingTypeIsSealed)
-        {
-            // protected static <#= templateType.RequiredIdentityField.TypeName #> NewIdentity() {
-            //     return (<#= templateType.RequiredIdentityField.TypeName #>)System.Threading.Interlocked.Increment(ref lastIdentityProduced);
-            // }
-            var method = SyntaxFactory.MethodDeclaration(
-                IdentityFieldTypeSyntax,
-                NewIdentityMethodName.Identifier)
-                .WithModifiers(SyntaxFactory.TokenList(
-                    SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
-                .WithBody(SyntaxFactory.Block(
-                    SyntaxFactory.ReturnStatement(
-                        SyntaxFactory.CastExpression(
-                            IdentityFieldTypeSyntax,
-                            SyntaxFactory.InvocationExpression(
-                                SyntaxFactory.ParseName("System.Threading.Interlocked.Increment"),
-                                SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(
-                                    null,
-                                    SyntaxFactory.Token(SyntaxKind.RefKeyword),
-                                    LastIdentityProducedFieldName))))))));
-            if (!containingTypeIsSealed)
-                method = method
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
-            return method;
-        }
+        //private static MemberDeclarationSyntax CreateNewIdentityMethod(bool containingTypeIsSealed)
+        //{
+        //    // protected static <#= templateType.RequiredIdentityField.TypeName #> NewIdentity() {
+        //    //     return (<#= templateType.RequiredIdentityField.TypeName #>)System.Threading.Interlocked.Increment(ref lastIdentityProduced);
+        //    // }
+        //    var method = SyntaxFactory.MethodDeclaration(
+        //        IdentityFieldTypeSyntax,
+        //        NewIdentityMethodName.Identifier)
+        //        .WithModifiers(SyntaxFactory.TokenList(
+        //            SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
+        //        .WithBody(SyntaxFactory.Block(
+        //            SyntaxFactory.ReturnStatement(
+        //                SyntaxFactory.CastExpression(
+        //                    IdentityFieldTypeSyntax,
+        //                    SyntaxFactory.InvocationExpression(
+        //                        SyntaxFactory.ParseName("System.Threading.Interlocked.Increment"),
+        //                        SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(
+        //                            null,
+        //                            SyntaxFactory.Token(SyntaxKind.RefKeyword),
+        //                            LastIdentityProducedFieldName))))))));
+        //    if (!containingTypeIsSealed)
+        //        method = method
+        //            .AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
+        //    return method;
+        //}
 
         private static IEnumerable<MetaField> SortRequiredFieldsFirst(IEnumerable<MetaField> fields)
         {
@@ -1003,11 +1003,11 @@
 
             public bool GenerateBuilder { get; set; }
 
-            public bool Delta { get; set; }
+            //public bool Delta { get; set; }
 
             public bool DefineInterface { get; set; }
 
-            public bool DefineRootedStruct { get; set; }
+            //public bool DefineRootedStruct { get; set; }
 
             public bool DefineWithMethodsPerProperty { get; set; }
         }
@@ -1145,6 +1145,11 @@
                         yield return field;
                     }
                 }
+            }
+
+            public int MaxGeneration
+            {
+                get { return DefinedGenerations.Max(); }
             }
 
             public IEnumerable<IGrouping<int, MetaField>> AllFieldsByGeneration

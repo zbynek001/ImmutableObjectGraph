@@ -32,9 +32,9 @@
             var options = new CodeGen.Options(this.attributeData)
             {
                 GenerateBuilder = this.GetBoolData(nameof(GenerateImmutableAttribute.GenerateBuilder)),
-                Delta = this.GetBoolData(nameof(GenerateImmutableAttribute.Delta)),
+                //Delta = this.GetBoolData(nameof(GenerateImmutableAttribute.Delta)),
                 DefineInterface = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineInterface)),
-                DefineRootedStruct = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
+                //DefineRootedStruct = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
                 DefineWithMethodsPerProperty = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty)),
             };
 
