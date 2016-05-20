@@ -1,15 +1,10 @@
 ﻿{
   "dependencies": {
-    "CodeGeneration.Roslyn": "0.1.57",
-    "Nerdbank.GitVersioning": "1.4.19",
-    "ReadOnlySourceTree": "0.1.37-beta"
-    //"System.Collections.Immutable": "1.1.37",
-    //"Validation": "2.2.8"
   },
   "frameworks": {
-    ".NETFramework,Version=v4.6": { }
+    ".NETFramework,Version=v4.6": {}
   },
   "runtimes": {
-    "win": { }
+    "win": {}
   }
 }
