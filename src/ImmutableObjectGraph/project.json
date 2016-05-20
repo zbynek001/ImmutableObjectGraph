@@ -1,16 +1,10 @@
 ﻿{
   "dependencies": {
-    "CodeGeneration.Roslyn": "0.1.43-alpha",
-    "Nerdbank.GitVersioning": {
-      "version": "1.1.61-rc",
-      "suppressParent": "none"
-    },
-    "NuProj": "0.10.30-beta-gcbd7693f91",
-    "NuProj.Common": {
-      "version": "0.10.30-beta-gcbd7693f91",
-      "suppressParent": "none"
-    },
-    "ReadOnlySourceTree": "0.1.24-beta",
+    "CodeGeneration.Roslyn": "0.1.57",
+    "Nerdbank.GitVersioning": "1.4.19",
+    "NuProj": "0.10.4-beta-gf7fc34e7d8",
+    "NuProj.Common": "0.10.4-beta",
+    "ReadOnlySourceTree": "0.1.37-beta",
     "System.Collections.Immutable": "1.1.37",
     "Validation": "2.2.8"
   },

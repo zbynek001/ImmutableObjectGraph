@@ -89,7 +89,7 @@
 
         public PluralizationService PluralService { get; set; }
 
-        public static async Task<IReadOnlyList<MemberDeclarationSyntax>> GenerateAsync(ClassDeclarationSyntax applyTo, Document document, IProgress<Diagnostic> progress, Options options, CancellationToken cancellationToken)
+        public static async Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(ClassDeclarationSyntax applyTo, Document document, IProgress<Diagnostic> progress, Options options, CancellationToken cancellationToken)
         {
             Requires.NotNull(applyTo, "applyTo");
             Requires.NotNull(document, "document");
@@ -108,7 +108,7 @@
             }
         }
 
-        private async Task<IReadOnlyList<MemberDeclarationSyntax>> GenerateAsync()
+        private async Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync()
         {
             this.semanticModel = await document.GetSemanticModelAsync(cancellationToken);
             this.isAbstract = applyTo.Modifiers.Any(m => m.IsKind(SyntaxKind.AbstractKeyword));
