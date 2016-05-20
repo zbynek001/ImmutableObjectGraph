@@ -52,7 +52,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="TestSources\AlmostRecursive.cs" />
     <EmbeddedResource Include="TestSources\HierarchyLevels.cs" />
-    <EmbeddedResource Include="TestSources\IgnoreField.cs" />
     <EmbeddedResource Include="TestSources\RootedStruct_Without_WithMethodsPerProperty.cs" />
     <Compile Include="TestSources\AbstractClassMidTypeHierarchyWithRequiredField.cs">
       <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
@@ -66,18 +65,11 @@
       <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
     </Compile>
     <Compile Include="TestSources\ImmutableDictionaryHelpers.Tests.cs" />
-    <Compile Include="TestSources\MSBuild.cs">
-      <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
-    </Compile>
-    <Compile Include="TestSources\MSBuild.Tests.cs" />
     <Compile Include="TestSources\Nested.cs">
       <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
     </Compile>
     <Compile Include="TestSources\Nested.Tests.cs" />
     <Compile Include="TestSources\NonRecursive.cs">
-      <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
-    </Compile>
-    <Compile Include="TestSources\ProjectTree.cs">
       <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
     </Compile>
     <Compile Include="TestSources\ProjectTreeCapabilities.cs" />
@@ -110,9 +102,6 @@
     <Compile Include="TestSources\AbstractClassFamilies.Tests.cs" />
     <Compile Include="TestSources\DeepHierarchy.Tests.cs" />
     <Compile Include="TestSources\Empty.Tests.cs" />
-    <Compile Include="TestSources\FileSystem.cs">
-      <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
-    </Compile>
     <Compile Include="TestSources\AbstractClassFamilies.cs">
       <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
     </Compile>
@@ -136,7 +125,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Compile Include="TestSources\FileSystem.Tests.cs" />
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
