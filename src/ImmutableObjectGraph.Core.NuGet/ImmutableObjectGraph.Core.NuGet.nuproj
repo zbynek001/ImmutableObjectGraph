@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup>
-    <NuProjPath>$(UserProfile)\.nuget\packages\NuProj\0.10.48-beta-gea4a31bbc5\tools</NuProjPath>
+    <NuProjPath>$(UserProfile)\.nuget\packages\NuProj\0.10.4-beta-gf7fc34e7d8\tools</NuProjPath>
     <NuSpecTemplate>ImmutableObjectGraph.nuspec</NuSpecTemplate>
     <ProjectBuildOutputGroup>Packages\</ProjectBuildOutputGroup>
   </PropertyGroup>
@@ -22,6 +22,7 @@
   <PropertyGroup Label="Configuration">
     <Id>ImmutableObjectGraph</Id>
     <Title>ImmutableObjectGraph Core</Title>
+    <Version>1.0.0</Version>
     <Authors>Andrew Arnott</Authors>
     <Owners>Andrew Arnott</Owners>
     <Summary>Runtime library for immutable types</Summary>
@@ -29,10 +30,11 @@
     <ReleaseNotes>
     </ReleaseNotes>
     <ProjectUrl>https://github.com/aarnott/immutableobjectgraph</ProjectUrl>
-    <LicenseUrl>https://raw.githubusercontent.com/AArnott/ImmutableObjectGraph/$GitCommitIdShort$/LICENSE.txt</LicenseUrl>
+    <LicenseUrl>https://raw.githubusercontent.com/AArnott/ImmutableObjectGraph/LICENSE.txt</LicenseUrl>
     <Copyright>Copyright © Andrew Arnott</Copyright>
     <Tags>immutable </Tags>
-    <GenerateSymbolPackage>false</GenerateSymbolPackage>
+    <EmbedSourceFiles>true</EmbedSourceFiles>
+	<GenerateSymbolPackage>true</GenerateSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\ImmutableObjectGraph\ImmutableObjectGraph.csproj" />
