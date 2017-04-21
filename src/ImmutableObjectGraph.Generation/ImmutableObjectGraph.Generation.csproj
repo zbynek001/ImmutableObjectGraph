@@ -20,7 +20,8 @@
 
   <ItemGroup>
     <PackageReference Include="CodeGeneration.Roslyn" Version="0.3.9" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="1.6.25" />
+    <PackageReference Include="CodeGeneration.Roslyn.BuildTime" Version="0.3.9" PrivateAssets="None" IncludeAssets="All" ExcludeAssets="None" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="1.6.25" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
