@@ -38,6 +38,7 @@
         private static readonly IdentifierNameSyntax varType = SyntaxFactory.IdentifierName("var");
         private static readonly IdentifierNameSyntax NestedTemplateTypeName = SyntaxFactory.IdentifierName("Template");
         private static readonly IdentifierNameSyntax CreateDefaultTemplateMethodName = SyntaxFactory.IdentifierName("CreateDefaultTemplate");
+        private static readonly IdentifierNameSyntax InitializeDefaultTemplateMethodName = SyntaxFactory.IdentifierName("InitializeDefaultTemplate");
         private static readonly IdentifierNameSyntax CreateMethodName = SyntaxFactory.IdentifierName("Create");
         private static readonly IdentifierNameSyntax NewIdentityMethodName = SyntaxFactory.IdentifierName("NewIdentity");
         private static readonly IdentifierNameSyntax WithFactoryMethodName = SyntaxFactory.IdentifierName("WithFactory");
@@ -148,6 +149,7 @@
                 innerMembers.Add(CreateDefaultInstanceField());
                 innerMembers.Add(CreateGetDefaultTemplateMethod());
                 innerMembers.Add(CreateCreateDefaultTemplatePartialMethod());
+                innerMembers.Add(CreateInitializeDefaultTemplateMethod());
                 innerMembers.Add(CreateTemplateStruct());
                 innerMembers.Add(CreateValidateMethod());
             }
@@ -325,6 +327,41 @@
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
 
+        private MemberDeclarationSyntax CreateInitializeDefaultTemplateMethod()
+        {
+            IdentifierNameSyntax templateVarName = SyntaxFactory.IdentifierName("template");
+
+            var body = SyntaxFactory.Block(
+
+                this.applyToMetaType.AllFields.Select(f => {
+                    //TODO: remove reflection
+                    var initializer = ((VariableDeclaratorSyntax)f.Symbol.GetType().GetProperty("VariableDeclaratorNode").GetValue(f.Symbol)).Initializer?.Value;
+                    if(initializer == null)
+                        return null;
+
+                    return SyntaxFactory.ExpressionStatement(
+                        SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, templateVarName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase())),
+                            initializer
+                        )
+                    );
+                }).Where(i => i != null)
+            );
+
+            return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                InitializeDefaultTemplateMethodName.Identifier)
+                .WithParameterList(SyntaxFactory.ParameterList(
+                    SyntaxFactory.SingletonSeparatedList(
+                        SyntaxFactory.Parameter(SyntaxFactory.Identifier("template"))
+                            .WithType(NestedTemplateTypeName)
+                            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword))))))
+                .WithModifiers(SyntaxFactory.TokenList(
+                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                    SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
+                .WithBody(body);
+        }
+
         private MemberDeclarationSyntax CreateGetDefaultTemplateMethod()
         {
             IdentifierNameSyntax templateVarName = SyntaxFactory.IdentifierName("template");
@@ -338,6 +375,11 @@
                                 templateVarName.Identifier,
                                 null,
                                 SyntaxFactory.EqualsValueClause(SyntaxFactory.ObjectCreationExpression(NestedTemplateTypeName, SyntaxFactory.ArgumentList(), null)))))),
+                // InitializeDefaultTemplate(ref template);
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        InitializeDefaultTemplateMethodName,
+                        SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), templateVarName))))),
                 // CreateDefaultTemplate(ref template);
                 SyntaxFactory.ExpressionStatement(
                     SyntaxFactory.InvocationExpression(

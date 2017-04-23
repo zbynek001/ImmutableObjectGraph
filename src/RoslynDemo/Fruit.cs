@@ -10,7 +10,7 @@
     [GenerateImmutable]
     partial class Fruit
     {
-        readonly string color;
+        readonly string color = "red";
         readonly int skinThickness;
     }
 }
