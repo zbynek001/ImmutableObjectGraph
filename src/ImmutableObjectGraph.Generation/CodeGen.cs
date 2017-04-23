@@ -45,6 +45,8 @@
         private static readonly IdentifierNameSyntax WithMethodName = SyntaxFactory.IdentifierName("With");
         private static readonly IdentifierNameSyntax WithCoreMethodName = SyntaxFactory.IdentifierName("WithCore");
         private static readonly IdentifierNameSyntax LastIdentityProducedFieldName = SyntaxFactory.IdentifierName("lastIdentityProduced");
+        private static readonly IdentifierNameSyntax InitializeMethodName = SyntaxFactory.IdentifierName("Initialize");
+        private static readonly IdentifierNameSyntax InitializeAllMethodName = SyntaxFactory.IdentifierName("InitializeAll");
         private static readonly IdentifierNameSyntax ValidateMethodName = SyntaxFactory.IdentifierName("Validate");
         private static readonly IdentifierNameSyntax SkipValidationParameterName = SyntaxFactory.IdentifierName("skipValidation");
         private static readonly AttributeSyntax DebuggerBrowsableNeverAttribute = SyntaxFactory.Attribute(
@@ -151,6 +153,13 @@
                 innerMembers.Add(CreateCreateDefaultTemplatePartialMethod());
                 innerMembers.Add(CreateInitializeDefaultTemplateMethod());
                 innerMembers.Add(CreateTemplateStruct());
+                //innerMembers.Add(CreateValidateMethod());
+            }
+
+            innerMembers.Add(CreateInitializeAllMethod());
+            innerMembers.Add(CreateInitializeMethod());
+
+            if (!isAbstract) {
                 innerMembers.Add(CreateValidateMethod());
             }
 
@@ -476,6 +485,25 @@
                                 IdentityParameterName))));
             }
 
+            body = body.AddStatements(
+                // this.InitializeAll(...);
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        Syntax.ThisDot(InitializeAllMethodName),
+                        SyntaxFactory.ArgumentList(
+                            Syntax.JoinSyntaxNodes(
+                                SyntaxKind.CommaToken,
+                                this.applyToMetaType.AllLocalFields.Select(f =>
+                                    SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), f.NameAsField)
+                                ))))));
+
+            body = body.AddStatements(
+                // this.Initialize();
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        Syntax.ThisDot(InitializeMethodName),
+                        SyntaxFactory.ArgumentList())));
+
             if (!this.isAbstract)
             {
                 body = body.AddStatements(
@@ -693,6 +721,38 @@
 
                 yield return method;
             }
+        }
+
+        private MethodDeclarationSyntax CreateInitializeMethod()
+        {
+            //// partial void Initialize();
+            return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                InitializeMethodName.Identifier)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        }
+
+        private MethodDeclarationSyntax CreateInitializeAllMethod()
+        {
+            //// partial void InitializeAll(...);
+            return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                InitializeAllMethodName.Identifier)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
+                .WithParameterList(
+                    SyntaxFactory.ParameterList(
+                        Syntax.JoinSyntaxNodes(
+                            SyntaxKind.CommaToken,
+                            this.applyToMetaType.AllLocalFields.Select(f =>
+                                SyntaxFactory.Parameter(f.NameAsField.Identifier)
+                                .WithType(f.TypeSyntax)
+                                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword)))
+                            )
+                        )
+                    )
+                )
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
 
         private MethodDeclarationSyntax CreateValidateMethod()
@@ -1120,6 +1180,29 @@
                     return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
                         .Where(f => !IsFieldIgnored(f))
                         .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
+                }
+            }
+
+            public IEnumerable<MetaField> LocalFieldsIgnored
+            {
+                get {
+                    var that = this;
+                    return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
+                        .Where(f => IsFieldIgnored(f))
+                        .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
+                }
+            }
+
+            public IEnumerable<MetaField> AllLocalFields
+            {
+                get {
+                    foreach (var field in this.LocalFields) {
+                        yield return field;
+                    }
+
+                    foreach (var field in this.LocalFieldsIgnored) {
+                        yield return field;
+                    }
                 }
             }
 
