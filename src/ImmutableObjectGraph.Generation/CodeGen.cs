@@ -460,6 +460,33 @@
                     .WithBody(SyntaxFactory.Block());
 
                 yield return ctor;
+
+
+                ctor = SyntaxFactory.ConstructorDeclaration(this.applyTo.Identifier)
+                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
+                    //.WithParameterList(this.CreateParameterList(this.applyToMetaType.AllFields, ParameterStyle.Required, usePascalCasing: true))
+                    .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(ObsoletePublicCtor))
+                    .WithInitializer(SyntaxFactory.ConstructorInitializer(
+                        SyntaxKind.ThisConstructorInitializer,
+
+                        //this.CreateArgumentList(this.applyToMetaType.AllFields, ArgSource.Missing)
+                        //    .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
+                        //    .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), SyntaxFactory.Token(SyntaxKind.None), SyntaxFactory.LiteralExpression(SyntaxKind.FalseLiteralExpression)))
+
+                        SyntaxFactory.ArgumentList(Syntax.JoinSyntaxNodes(
+                            SyntaxKind.CommaToken,
+                            this.applyToMetaType.AllFields.Select(f =>
+                                SyntaxFactory.Argument(
+                                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(f.Name)),
+                                    NoneToken,
+                                    SyntaxFactory.DefaultExpression(f.TypeSyntax)
+                                    ))))
+                        .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
+                        .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), SyntaxFactory.Token(SyntaxKind.None), SyntaxFactory.LiteralExpression(SyntaxKind.FalseLiteralExpression)))
+                    ))
+                    .WithBody(SyntaxFactory.Block());
+
+                yield return ctor;
             }
         }
 
