@@ -10,6 +10,15 @@
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Validation;
+    using System.Reflection;
+
+    internal static class HExtensions
+    {
+        public static bool IsInstanceOfType(this Type type, object obj)
+        {
+            return obj != null && type.GetTypeInfo().IsAssignableFrom(obj.GetType().GetTypeInfo());
+        }
+    }
 
     internal static class StyleCop
     {
@@ -69,6 +78,7 @@
 
             return compareResult;
         }
+
 
         private static int GetMemberDeclarationTypeOrder(MemberDeclarationSyntax member)
         {

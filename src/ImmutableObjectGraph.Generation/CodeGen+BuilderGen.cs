@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Data.Entity.Design.PluralizationServices;
+    //using System.Data.Entity.Design.PluralizationServices;
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
@@ -240,7 +240,7 @@
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     SyntaxFactory.ThisExpression(),
                                     OnPropertyChangedMethodName))));
-                    var setterBlock = setterCondition != null ? 
+                    var setterBlock = setterCondition != null ?
                         SyntaxFactory.Block(
                             SyntaxFactory.IfStatement(
                                 setterCondition,

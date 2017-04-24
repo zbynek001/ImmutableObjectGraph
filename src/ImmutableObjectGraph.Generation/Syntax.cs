@@ -12,6 +12,7 @@
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Text;
     using Validation;
+    using System.Reflection;
 
     internal static class Syntax
     {
@@ -74,8 +75,8 @@
         {
             Requires.NotNull(type, nameof(type));
 
-            SimpleNameSyntax leafType = SyntaxFactory.IdentifierName(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name);
-            if (type.IsGenericType)
+            SimpleNameSyntax leafType = SyntaxFactory.IdentifierName(type.GetTypeInfo().IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name);
+            if (type.GetTypeInfo().IsGenericType)
             {
                 leafType = SyntaxFactory.GenericName(
                     ((IdentifierNameSyntax)leafType).Identifier,

@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Data.Entity.Design.PluralizationServices;
+    //using System.Data.Entity.Design.PluralizationServices;
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
@@ -47,8 +47,10 @@
                 {
                     var distinguisher = field.Distinguisher;
                     string suffix = distinguisher != null ? distinguisher.CollectionModifierMethodSuffix : null;
-                    string plural = suffix != null ? (this.generator.PluralService.Singularize(field.Name.ToPascalCase()) + this.generator.PluralService.Pluralize(suffix)) : field.Name.ToPascalCase();
-                    string singular = this.generator.PluralService.Singularize(field.Name.ToPascalCase()) + suffix;
+                    //string plural = suffix != null ? (this.generator.PluralService.Singularize(field.Name.ToPascalCase()) + this.generator.PluralService.Pluralize(suffix)) : field.Name.ToPascalCase();
+                    //string singular = this.generator.PluralService.Singularize(field.Name.ToPascalCase()) + suffix;
+                    string plural = suffix != null ? (field.Name.ToPascalCase().ToSingular() + suffix.ToPlural()) : field.Name.ToPascalCase();
+                    string singular = field.Name.ToPascalCase().ToSingular() + suffix;
 
                     if (field.IsCollection)
                     {

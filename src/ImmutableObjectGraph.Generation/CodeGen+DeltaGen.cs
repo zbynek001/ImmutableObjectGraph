@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Data.Entity.Design.PluralizationServices;
+    //using System.Data.Entity.Design.PluralizationServices;
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
@@ -451,7 +451,7 @@
                                                 SyntaxFactory.InvocationExpression(
                                                     Syntax.ThisDot(SyntaxFactory.IdentifierName(nameof(GetType))),
                                                     SyntaxFactory.ArgumentList()),
-                                                SyntaxFactory.IdentifierName(nameof(Type.IsEquivalentTo)))).AddArgumentListArguments(
+                                                SyntaxFactory.IdentifierName("IsEquivalentTo" /*nameof(Type.IsEquivalentTo)*/))).AddArgumentListArguments(
                                                     SyntaxFactory.Argument(
                                                         SyntaxFactory.InvocationExpression(
                                                             SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, otherParam, SyntaxFactory.IdentifierName(nameof(GetType))),
@@ -528,7 +528,7 @@
                         ////     get { return ImmutableObjectGraph.Comparers.Parented<<#= templateType.RecursiveParent.TypeName #>, <#= templateType.TypeName #>>(); }
                         //// }
                         //defineProperty(
-                            
+
                         //    this.recursiveDiffingType
                         //    ).WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.InternalKeyword), SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
                     );

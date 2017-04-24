@@ -1,10 +1,11 @@
-﻿namespace ImmutableObjectGraph.Generation
+﻿
+namespace ImmutableObjectGraph.Generation
 {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Data.Entity.Design.PluralizationServices;
+    //using System.Data.Entity.Design.PluralizationServices;
     using System.Diagnostics;
     using System.Globalization;
     using System.Linq;
@@ -17,8 +18,9 @@
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Text;
     using Validation;
+    using System.Reflection;
     using LookupTableHelper = RecursiveTypeExtensions.LookupTable<IRecursiveType, IRecursiveParentWithLookupTable<IRecursiveType>>;
-    using System.Data.Entity.Design.PluralizationServices;
+    //using System.Data.Entity.Design.PluralizationServices;
 
     //using System.ComponentModel.DataAnnotations;
 
@@ -88,10 +90,10 @@
             this.options = options ?? new Options();
             this.cancellationToken = cancellationToken;
 
-            this.PluralService = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
+            //this.PluralService = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
         }
 
-        public PluralizationService PluralService { get; set; }
+        //public PluralizationService PluralService { get; set; }
 
         public static async Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(ClassDeclarationSyntax applyTo, CSharpCompilation compilation, IProgress<Diagnostic> progress, Options options, CancellationToken cancellationToken)
         {
@@ -344,7 +346,7 @@
 
                 this.applyToMetaType.AllFields.Select(f => {
                     //TODO: remove reflection
-                    var initializer = ((VariableDeclaratorSyntax)f.Symbol.GetType().GetProperty("VariableDeclaratorNode").GetValue(f.Symbol)).Initializer?.Value;
+                    var initializer = ((VariableDeclaratorSyntax)f.Symbol.GetType().GetTypeInfo().GetProperty("VariableDeclaratorNode").GetValue(f.Symbol)).Initializer?.Value;
                     if(initializer == null)
                         return null;
 

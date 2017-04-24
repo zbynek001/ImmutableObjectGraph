@@ -2,16 +2,17 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Data.Entity.Design.PluralizationServices;
+    //using System.Data.Entity.Design.PluralizationServices;
     using System.Globalization;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
     using Validation;
+    using Humanizer;
 
     internal static class Utilities
     {
-        internal static readonly PluralizationService PluralizationService = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
+        //internal static readonly PluralizationService PluralizationService = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
 
         internal static string ToPascalCase(this string name)
         {
@@ -27,12 +28,14 @@
 
         internal static string ToPlural(this string word)
         {
-            return PluralizationService.Pluralize(word);
+            //return PluralizationService.Pluralize(word);
+            return word.Pluralize(false);
         }
 
         internal static string ToSingular(this string word)
         {
-            return PluralizationService.Singularize(word);
+            //return PluralizationService.Singularize(word);
+            return word.Singularize(false);
         }
     }
 }
