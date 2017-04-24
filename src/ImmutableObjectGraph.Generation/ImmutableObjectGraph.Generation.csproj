@@ -16,7 +16,7 @@
     <PackageProjectUrl>https://github.com/aarnott/immutableobjectgraph</PackageProjectUrl>
     <Copyright>Copyright © Andrew Arnott</Copyright>
     <PackageTags>immutable</PackageTags>
-    <Version>1.1.126-betaZ</Version>
+    <Version>1.1.127-betaZ</Version>
 
 
     <!-- We're going to include it by virtue of sending the whole bin dir to the build folder. -->
@@ -38,16 +38,30 @@
     <ProjectReference Include="..\ImmutableObjectGraph\ImmutableObjectGraph.csproj" />
   </ItemGroup>
 
-
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
     <Reference Include="CodeGeneration.Roslyn.Tasks">
-      <HintPath>lib\CodeGeneration.Roslyn.Tasks.dll</HintPath>
+      <HintPath>lib\net46\CodeGeneration.Roslyn.Tasks.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="CodeGeneration.Roslyn.Tasks.Helper">
-      <HintPath>lib\CodeGeneration.Roslyn.Tasks.Helper.dll</HintPath>
+      <HintPath>lib\net46\CodeGeneration.Roslyn.Tasks.Helper.dll</HintPath>
       <Private>true</Private>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp1.0'">
+    <Reference Include="CodeGeneration.Roslyn.Tasks">
+      <HintPath>lib\netcoreapp1.0\CodeGeneration.Roslyn.Tasks.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="CodeGeneration.Roslyn.Tasks.Helper">
+      <HintPath>lib\netcoreapp1.0\CodeGeneration.Roslyn.Tasks.Helper.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+
+  <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <!--<Reference Include="System.Data.Entity.Design">
       <Private>true</Private>
