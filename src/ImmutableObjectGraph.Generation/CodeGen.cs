@@ -1217,11 +1217,42 @@ namespace ImmutableObjectGraph.Generation
         protected struct MetaType
         {
             private CodeGen generator;
+            private CodeGen.Options options;
 
             public MetaType(CodeGen codeGen, INamedTypeSymbol typeSymbol)
             {
                 this.generator = codeGen;
                 this.TypeSymbol = typeSymbol;
+                this.options = null;
+            }
+
+            public CodeGen.Options Options
+            {
+                get
+                {
+                    if (options == null)
+                    {
+                        var gia = this.TypeSymbol.GetAttributes().FirstOrDefault(a => IsOrDerivesFrom<GenerateImmutableAttribute>(a.AttributeClass));
+                        if (gia != null)
+                        {
+                            var data = gia.NamedArguments.ToImmutableDictionary(kv => kv.Key, kv => kv.Value);
+
+                            bool GetBoolData(string name)
+                            {
+                                return (bool)(data.GetValueOrDefault(name).Value ?? false);
+                            }
+                            options = new CodeGen.Options(gia)
+                            {
+                                GenerateBuilder = GetBoolData(nameof(GenerateImmutableAttribute.GenerateBuilder)),
+                                Delta = GetBoolData(nameof(GenerateImmutableAttribute.Delta)),
+                                DefineInterface = GetBoolData(nameof(GenerateImmutableAttribute.DefineInterface)),
+                                DefineRootedStruct = GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
+                                DefineWithMethodsPerProperty = GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty))
+                            };
+                        }
+                    }
+                    return options;
+                }
             }
 
             public CodeGen Generator

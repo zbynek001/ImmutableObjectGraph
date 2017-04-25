@@ -48,18 +48,34 @@
                     .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
                     .WithMembers(
                         SyntaxFactory.List<MemberDeclarationSyntax>(
-                            from field in this.generator.applyToMetaType.LocalFields
+                            //from field in this.generator.applyToMetaType.LocalFields
+                            from field in this.generator.applyToMetaType.Ancestors.Where(i => !i.Options.DefineInterface).Reverse().SelectMany(i => i.LocalFields).Union(this.generator.applyToMetaType.LocalFields)
                             select SyntaxFactory.PropertyDeclaration(
                                 GetFullyQualifiedSymbolName(field.Type),
                                 field.Name.ToPascalCase())
                                 .WithAccessorList(SyntaxFactory.AccessorList(SyntaxFactory.SingletonList(
                                     SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))))));
-                if (this.generator.applyToMetaType.HasAncestor)
+
+                //if (this.generator.applyToMetaType.HasAncestor)
+                //{
+                //    iface = iface.WithBaseList(SyntaxFactory.BaseList(
+                //        SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(SyntaxFactory.SimpleBaseType(
+                //            SyntaxFactory.IdentifierName("I" + this.generator.applyToMetaType.Ancestor.TypeSymbol.Name)))));
+                //}
                 {
-                    iface = iface.WithBaseList(SyntaxFactory.BaseList(
-                        SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(SyntaxFactory.SimpleBaseType(
-                            SyntaxFactory.IdentifierName("I" + this.generator.applyToMetaType.Ancestor.TypeSymbol.Name)))));
+                    var mt = this.generator.applyToMetaType;
+                    while (mt.HasAncestor)
+                    {
+                        mt = mt.Ancestor;
+                        if (mt.Options.DefineInterface)
+                        {
+                            iface = iface.WithBaseList(SyntaxFactory.BaseList(
+                                SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(SyntaxFactory.SimpleBaseType(
+                                    SyntaxFactory.IdentifierName("I" + mt.TypeSymbol.Name)))));
+                            break;
+                        }
+                    }
                 }
 
                 this.siblingMembers.Add(iface);
