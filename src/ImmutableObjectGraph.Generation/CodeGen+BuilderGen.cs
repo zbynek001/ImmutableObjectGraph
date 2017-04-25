@@ -60,12 +60,28 @@
                         SyntaxFactory.Token(SyntaxKind.PartialKeyword));
                 if (this.generator.applyToMetaType.HasAncestor)
                 {
-                    builderType = builderType
-                        .WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
-                            SyntaxFactory.SimpleBaseType(SyntaxFactory.QualifiedName(
-                                GetFullyQualifiedSymbolName(this.generator.applyToMetaType.Ancestor.TypeSymbol),
-                                BuilderTypeName)))))
-                        .WithModifiers(builderType.Modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.NewKeyword)));
+                    //builderType = builderType
+                    //    .WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
+                    //        SyntaxFactory.SimpleBaseType(SyntaxFactory.QualifiedName(
+                    //            GetFullyQualifiedSymbolName(this.generator.applyToMetaType.Ancestor.TypeSymbol),
+                    //            BuilderTypeName)))))
+                    //    .WithModifiers(builderType.Modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.NewKeyword)));
+
+                    var mt = this.generator.applyToMetaType;
+                    while (mt.HasAncestor)
+                    {
+                        mt = mt.Ancestor;
+                        if (mt.Options.GenerateBuilder)
+                        {
+                            builderType = builderType
+                                .WithBaseList(SyntaxFactory.BaseList(SyntaxFactory.SingletonSeparatedList<BaseTypeSyntax>(
+                                    SyntaxFactory.SimpleBaseType(SyntaxFactory.QualifiedName(
+                                        GetFullyQualifiedSymbolName(mt.TypeSymbol),
+                                        BuilderTypeName)))))
+                                .WithModifiers(builderType.Modifiers.Insert(0, SyntaxFactory.Token(SyntaxKind.NewKeyword)));
+                            break;
+                        }
+                    }
                 }
                 else
                 {
@@ -139,7 +155,8 @@
             {
                 var fields = new List<FieldDeclarationSyntax>();
 
-                foreach (var field in this.generator.applyToMetaType.LocalFields)
+                //foreach (var field in this.generator.applyToMetaType.LocalFields)
+                foreach (var field in this.generator.applyToMetaType.Ancestors.Where(i => !i.Options.GenerateBuilder).Reverse().SelectMany(i => i.LocalFields).Union(this.generator.applyToMetaType.LocalFields))
                 {
                     fields.Add(SyntaxFactory.FieldDeclaration(SyntaxFactory.VariableDeclaration(
                         this.GetFieldTypeForBuilder(field),
@@ -159,14 +176,16 @@
                         SyntaxKind.SimpleAssignmentExpression,
                         Syntax.ThisDot(ImmutableFieldName),
                         immutableParameterName)));
-                foreach (var field in this.generator.applyToMetaType.LocalFields)
+                //foreach (var field in this.generator.applyToMetaType.LocalFields)
+                foreach (var field in this.generator.applyToMetaType.Ancestors.Where(i => !i.Options.GenerateBuilder).Reverse().SelectMany(i => i.LocalFields).Union(this.generator.applyToMetaType.LocalFields))
                 {
                     if (!field.IsGeneratedImmutableType)
                     {
                         body = body.AddStatements(SyntaxFactory.ExpressionStatement(SyntaxFactory.AssignmentExpression(
                             SyntaxKind.SimpleAssignmentExpression,
                             Syntax.ThisDot(field.NameAsField),
-                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, immutableParameterName, field.NameAsField))));
+                            //SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, immutableParameterName, field.NameAsField))));
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, immutableParameterName, (field.DeclaringType.TypeSymbol == this.generator.applyToMetaType.TypeSymbol) ? field.NameAsField : field.NameAsProperty))));
                     }
                 }
 
@@ -190,7 +209,8 @@
             {
                 var properties = new List<PropertyDeclarationSyntax>();
 
-                foreach (var field in this.generator.applyToMetaType.LocalFields)
+                //foreach (var field in this.generator.applyToMetaType.LocalFields)
+                foreach (var field in this.generator.applyToMetaType.Ancestors.Where(i => !i.Options.GenerateBuilder).Reverse().SelectMany(i => i.LocalFields).Union(this.generator.applyToMetaType.LocalFields))
                 {
                     var thisField = Syntax.ThisDot(field.NameAsField);
                     var optionalFieldNotYetDefined = SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, Syntax.OptionalIsDefined(thisField));
