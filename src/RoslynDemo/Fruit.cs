@@ -7,7 +7,7 @@
     using System.Threading.Tasks;
     using ImmutableObjectGraph.Generation;
 
-    [GenerateImmutable]
+    [GenerateImmutable(DefineInterface = true, GenerateBuilder = true)]
     partial class Fruit
     {
         readonly string color = "red";

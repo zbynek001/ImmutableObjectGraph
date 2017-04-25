@@ -464,37 +464,7 @@ namespace ImmutableObjectGraph.Generation
                 yield return ctor;
 
 
-                //ctor = SyntaxFactory.ConstructorDeclaration(this.applyTo.Identifier)
-                //    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                //    //.WithParameterList(this.CreateParameterList(this.applyToMetaType.AllFields, ParameterStyle.Required, usePascalCasing: true))
-                //    .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(ObsoletePublicCtor))
-                //    .WithInitializer(SyntaxFactory.ConstructorInitializer(
-                //        SyntaxKind.ThisConstructorInitializer,
-                //        SyntaxFactory.ArgumentList(Syntax.JoinSyntaxNodes(
-                //            SyntaxKind.CommaToken,
-                //            this.applyToMetaType.AllFields.Select(f =>
-                //                SyntaxFactory.Argument(
-                //                    SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(f.Name)),
-                //                    NoneToken,
-                //                    SyntaxFactory.DefaultExpression(f.TypeSyntax)
-                //                    ))))
-                //        .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
-                //        .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), SyntaxFactory.Token(SyntaxKind.None), SyntaxFactory.LiteralExpression(SyntaxKind.FalseLiteralExpression)))
-                //    ))
-                //    .WithBody(SyntaxFactory.Block());
-
-                //yield return ctor;
-
-
-
                 BlockSyntax body = SyntaxFactory.Block();
-                    // this.someField = someField;
-                    //this.GetFieldVariables().Select(f => SyntaxFactory.ExpressionStatement(
-                    //    SyntaxFactory.AssignmentExpression(
-                    //        SyntaxKind.SimpleAssignmentExpression,
-                    //        Syntax.ThisDot(SyntaxFactory.IdentifierName(f.Value.Identifier)),
-                    //        SyntaxFactory.IdentifierName(f.Value.Identifier)))));
-
                 if (!this.applyToMetaType.HasAncestor)
                 {
                     body = body.WithStatements(
@@ -531,26 +501,21 @@ namespace ImmutableObjectGraph.Generation
                 if (!this.isAbstract)
                 {
                     body = body.AddStatements(
-                        // if (!skipValidation)
-                        //SyntaxFactory.IfStatement(
-                        //    SyntaxFactory.PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, SkipValidationParameterName),
-                            // this.Validate();
-                        //    SyntaxFactory.Block(
-                                SyntaxFactory.ExpressionStatement(
-                                    SyntaxFactory.InvocationExpression(
-                                        Syntax.ThisDot(ValidateMethodName),
-                                        SyntaxFactory.ArgumentList())))/*))*/;
+                        SyntaxFactory.ExpressionStatement(
+                            SyntaxFactory.InvocationExpression(
+                                Syntax.ThisDot(ValidateMethodName),
+                                SyntaxFactory.ArgumentList())));
                 }
 
                 ctor = SyntaxFactory.ConstructorDeclaration(
                     this.applyTo.Identifier)
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PrivateKeyword))
-                    //.WithParameterList(
-                    //    CreateParameterList(this.applyToMetaType.AllFields, ParameterStyle.Required)
-                    //    .PrependParameter(RequiredIdentityParameter)
-                    //    .AddParameters(SyntaxFactory.Parameter(SkipValidationParameterName.Identifier).WithType(SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.BoolKeyword)))))
                     .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(ObsoletePublicCtor))
                     .WithBody(body);
+
+                if (!this.isSealed) {
+                    ctor = ctor
+                        .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword)));
+                }
 
                 //if (this.applyToMetaType.HasAncestor)
                 //{

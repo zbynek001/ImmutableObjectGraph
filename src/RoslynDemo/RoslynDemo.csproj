@@ -4,6 +4,12 @@
     <TargetFrameworks>net46</TargetFrameworks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="obj\bin\**" />
+    <EmbeddedResource Remove="obj\bin\**" />
+    <None Remove="obj\bin\**" />
+  </ItemGroup>
+
   <!--<ItemGroup>
     <Compile Update="**\*.cs">
       <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
@@ -18,5 +24,8 @@
     <ProjectReference Include="..\ImmutableObjectGraph.Generation\ImmutableObjectGraph.Generation.csproj" />
     <!--<ProjectReference Include="..\ImmutableObjectGraph.Generation\ImmutableObjectGraph.Generation.csproj" />-->
   </ItemGroup>
+  <!--<ItemGroup>
+    <Reference Include="System.Data.Entity.Design" />
+  </ItemGroup>-->
 
 </Project>
