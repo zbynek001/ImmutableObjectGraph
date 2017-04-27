@@ -37,6 +37,7 @@
                 DefineInterface = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineInterface)),
                 DefineRootedStruct = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
                 DefineWithMethodsPerProperty = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty)),
+                ProtectedWithers = this.GetBoolData(nameof(GenerateImmutableAttribute.ProtectedWithers)),
             };
 
             return CodeGen.GenerateAsync((ClassDeclarationSyntax)applyTo, compilation, progress, options, cancellationToken);

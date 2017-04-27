@@ -5,7 +5,7 @@
     using global::CodeGeneration.Roslyn;
 
     [AttributeUsage(AttributeTargets.Class)]
-    [Conditional("CodeGeneration")]
+    //[Conditional("CodeGeneration")]
     [CodeGenerationAttribute("ImmutableObjectGraph.Generation.CodeGenerator, ImmutableObjectGraph.Generation, Version=" + ThisAssembly.AssemblyVersion + ", Culture=neutral, PublicKeyToken=bfd91f1bd601e0d7")]
     public class GenerateImmutableAttribute : Attribute
     {
@@ -22,5 +22,7 @@
         public bool DefineRootedStruct { get; set; }
 
         public bool DefineWithMethodsPerProperty { get; set; }
+
+        public bool ProtectedWithers { get; set; }
     }
 }

@@ -622,7 +622,7 @@ namespace ImmutableObjectGraph.Generation
                 var method = SyntaxFactory.MethodDeclaration(
                     SyntaxFactory.IdentifierName(this.applyTo.Identifier),
                     GetGenerationalMethodName(WithMethodName, fieldsGroup.Key).Identifier)
-                    .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                    .AddModifiers(SyntaxFactory.Token(options.ProtectedWithers ? SyntaxKind.ProtectedKeyword : SyntaxKind.PublicKeyword))
                     .WithParameterList(CreateParameterList(fieldsGroup, ParameterStyle.Optional))
                     .WithBody(SyntaxFactory.Block(
                         SyntaxFactory.ReturnStatement(
@@ -1194,6 +1194,8 @@ namespace ImmutableObjectGraph.Generation
             public bool DefineRootedStruct { get; set; }
 
             public bool DefineWithMethodsPerProperty { get; set; }
+
+            public bool ProtectedWithers { get; set; }
         }
 
         protected abstract class FeatureGenerator
@@ -1294,7 +1296,8 @@ namespace ImmutableObjectGraph.Generation
                                 Delta = GetBoolData(nameof(GenerateImmutableAttribute.Delta)),
                                 DefineInterface = GetBoolData(nameof(GenerateImmutableAttribute.DefineInterface)),
                                 DefineRootedStruct = GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
-                                DefineWithMethodsPerProperty = GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty))
+                                DefineWithMethodsPerProperty = GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty)),
+                                ProtectedWithers = GetBoolData(nameof(GenerateImmutableAttribute.ProtectedWithers))
                             };
                         }
                     }
