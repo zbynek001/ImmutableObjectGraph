@@ -44,7 +44,7 @@
                         WithPropertyMethodPrefix + field.Name.ToPascalCase())
                         .WithAdditionalAnnotations()
                         .AddModifiers(
-                            SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                            SyntaxFactory.Token(this.generator.options.ProtectedWithers ? SyntaxKind.ProtectedKeyword : SyntaxKind.PublicKeyword))
                         .AddParameterListParameters(
                             SyntaxFactory.Parameter(valueParameterName.Identifier)
                                 .WithType(GetFullyQualifiedSymbolName(field.Type)))
@@ -80,7 +80,7 @@
                         withMethodName)
                         .AddModifiers(
                             SyntaxFactory.Token(SyntaxKind.NewKeyword),
-                            SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                            SyntaxFactory.Token(this.generator.options.ProtectedWithers ? SyntaxKind.ProtectedKeyword : SyntaxKind.PublicKeyword))
                         .AddParameterListParameters(
                             SyntaxFactory.Parameter(valueParameterName.Identifier)
                                 .WithType(GetFullyQualifiedSymbolName(field.Type)))
