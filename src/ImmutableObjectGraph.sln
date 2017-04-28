@@ -16,6 +16,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version.json = version.json
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RoslynDemo2", "RoslynDemo2\RoslynDemo2.csproj", "{BBEAC1B1-71C6-4D05-B338-5561E07CC145}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImmutableObjectGraph.Generation.Tests", "ImmutableObjectGraph.Generation.Tests\ImmutableObjectGraph.Generation.Tests.csproj", "{82A681FB-7595-48C9-B528-454642A8A09C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +42,14 @@ Global
 		{3DC28446-2150-4609-B542-E320C93E05A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DC28446-2150-4609-B542-E320C93E05A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3DC28446-2150-4609-B542-E320C93E05A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBEAC1B1-71C6-4D05-B338-5561E07CC145}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBEAC1B1-71C6-4D05-B338-5561E07CC145}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBEAC1B1-71C6-4D05-B338-5561E07CC145}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBEAC1B1-71C6-4D05-B338-5561E07CC145}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82A681FB-7595-48C9-B528-454642A8A09C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82A681FB-7595-48C9-B528-454642A8A09C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82A681FB-7595-48C9-B528-454642A8A09C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82A681FB-7595-48C9-B528-454642A8A09C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

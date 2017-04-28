@@ -119,6 +119,11 @@ namespace ImmutableObjectGraph.Generation
         {
             //this.semanticModel = await document.GetSemanticModelAsync(cancellationToken);
             this.semanticModel = compilation.GetSemanticModel(applyTo.SyntaxTree, true);
+
+            var gia = compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Generation.GenerateImmutableAttribute).FullName);
+            if(!((ClassDeclarationSyntax)applyTo).AttributeLists.Any(al => al.Attributes.Any(a => semanticModel.GetSymbolInfo(a).Symbol.ContainingType == gia)))
+                return Task.FromResult(SyntaxFactory.List<MemberDeclarationSyntax>());
+
             this.isAbstract = applyTo.Modifiers.Any(m => m.IsKind(SyntaxKind.AbstractKeyword));
             this.isSealed = applyTo.Modifiers.Any(m => m.IsKind(SyntaxKind.SealedKeyword));
             this.applyToTypeName = SyntaxFactory.IdentifierName(this.applyTo.Identifier);
@@ -154,10 +159,10 @@ namespace ImmutableObjectGraph.Generation
                 innerMembers.Add(CreateDefaultInstanceField());
                 innerMembers.Add(CreateGetDefaultTemplateMethod());
                 innerMembers.Add(CreateCreateDefaultTemplatePartialMethod());
-                innerMembers.Add(CreateInitializeDefaultTemplateMethod());
                 innerMembers.Add(CreateTemplateStruct());
                 //innerMembers.Add(CreateValidateMethod());
             }
+            innerMembers.Add(CreateInitializeDefaultTemplateMethod());
 
             innerMembers.Add(CreateInitializeAllMethod());
             innerMembers.Add(CreateInitializeMethod());
@@ -341,37 +346,59 @@ namespace ImmutableObjectGraph.Generation
 
         private MemberDeclarationSyntax CreateInitializeDefaultTemplateMethod()
         {
-            IdentifierNameSyntax templateVarName = SyntaxFactory.IdentifierName("template");
+            var body = SyntaxFactory.Block();
 
-            var body = SyntaxFactory.Block(
+            if (this.applyToMetaType.HasAncestor)
+            {
+                body = body.AddStatements(
+                    SyntaxFactory.ExpressionStatement(
+                        SyntaxFactory.InvocationExpression(
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                GetFullyQualifiedSymbolName(this.applyToMetaType.Ancestor.TypeSymbol),
+                                InitializeDefaultTemplateMethodName
+                            ),
+                            SyntaxFactory.ArgumentList(
+                                Syntax.JoinSyntaxNodes(
+                                    SyntaxKind.CommaToken,
+                                    this.applyToMetaType.InheritedFields.Select(f => SyntaxFactory.Argument(SyntaxFactory.NameColon(f.NameAsField), SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.IdentifierName(f.NameAsField.Identifier)))
+                                )
+                            )
+                        )
+                    )
+                );
+            }
 
-                this.applyToMetaType.AllFields.Select(f => {
+            body = body.AddStatements(
+                this.applyToMetaType.LocalFields.Select(f =>
+                {
                     //TODO: remove reflection
                     var initializer = ((VariableDeclaratorSyntax)f.Symbol.GetType().GetTypeInfo().GetProperty("VariableDeclaratorNode").GetValue(f.Symbol)).Initializer?.Value;
-                    if(initializer == null)
+                    if (initializer == null)
                         return null;
 
                     return SyntaxFactory.ExpressionStatement(
                         SyntaxFactory.AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
-                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, templateVarName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase())),
+                            SyntaxFactory.IdentifierName(f.NameAsField.Identifier),
                             initializer
                         )
                     );
-                }).Where(i => i != null)
+                }).Where(i => i != null).ToArray()
             );
 
-            return SyntaxFactory.MethodDeclaration(
+            var method = SyntaxFactory.MethodDeclaration(
                 SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
                 InitializeDefaultTemplateMethodName.Identifier)
                 .WithParameterList(SyntaxFactory.ParameterList(
-                    SyntaxFactory.SingletonSeparatedList(
-                        SyntaxFactory.Parameter(SyntaxFactory.Identifier("template"))
-                            .WithType(NestedTemplateTypeName)
-                            .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword))))))
+                    Syntax.JoinSyntaxNodes(
+                        SyntaxKind.CommaToken,
+                        this.applyToMetaType.AllFields.Select(f => SyntaxFactory.Parameter(f.NameAsField.Identifier).WithType(GetFullyQualifiedSymbolName(f.Type)).WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword))))
+                    )
+                ))
                 .WithModifiers(SyntaxFactory.TokenList(
-                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                    SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),
                     SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
                 .WithBody(body);
+            return method;
         }
 
         private MemberDeclarationSyntax CreateGetDefaultTemplateMethod()
@@ -387,11 +414,24 @@ namespace ImmutableObjectGraph.Generation
                                 templateVarName.Identifier,
                                 null,
                                 SyntaxFactory.EqualsValueClause(SyntaxFactory.ObjectCreationExpression(NestedTemplateTypeName, SyntaxFactory.ArgumentList(), null)))))),
-                // InitializeDefaultTemplate(ref template);
+                // InitializeDefaultTemplate(ref ...);
                 SyntaxFactory.ExpressionStatement(
                     SyntaxFactory.InvocationExpression(
                         InitializeDefaultTemplateMethodName,
-                        SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), templateVarName))))),
+                        SyntaxFactory.ArgumentList(
+                            Syntax.JoinSyntaxNodes(
+                                SyntaxKind.CommaToken,
+                                this.applyToMetaType.AllFields.Select(f => SyntaxFactory.Argument(SyntaxFactory.NameColon(f.NameAsField), SyntaxFactory.Token(SyntaxKind.RefKeyword),
+                                    //SyntaxFactory.IdentifierName(f.NameAsField.Identifier)
+                                    SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                        templateVarName,
+                                        SyntaxFactory.IdentifierName(f.Name.ToPascalCase())
+                                    )
+                                ))
+                            )
+                        )
+                    )
+                ),
                 // CreateDefaultTemplate(ref template);
                 SyntaxFactory.ExpressionStatement(
                     SyntaxFactory.InvocationExpression(
@@ -463,8 +503,10 @@ namespace ImmutableObjectGraph.Generation
                     .WithBody(SyntaxFactory.Block());
 
                 yield return ctor;
+            }
 
-
+            if (this.isAbstract || this.applyToMetaType.AllFields.Any())
+            {
                 BlockSyntax body = SyntaxFactory.Block();
                 if (!this.applyToMetaType.HasAncestor)
                 {
@@ -508,7 +550,7 @@ namespace ImmutableObjectGraph.Generation
                                 SyntaxFactory.ArgumentList())));
                 }
 
-                ctor = SyntaxFactory.ConstructorDeclaration(
+                var ctor = SyntaxFactory.ConstructorDeclaration(
                     this.applyTo.Identifier)
                     .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(ObsoletePublicCtor))
                     .WithBody(body);
@@ -518,18 +560,7 @@ namespace ImmutableObjectGraph.Generation
                         .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword)));
                 }
 
-                //if (this.applyToMetaType.HasAncestor)
-                //{
-                //    ctor = ctor.WithInitializer(
-                //        SyntaxFactory.ConstructorInitializer(
-                //            SyntaxKind.BaseConstructorInitializer,
-                //            this.CreateArgumentList(this.applyToMetaType.InheritedFields, ArgSource.Argument)
-                //                .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName))
-                //                .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), NoneToken, SkipValidationParameterName))));
-                //}
-
                 yield return ctor;
-
             }
         }
 
@@ -717,7 +748,7 @@ namespace ImmutableObjectGraph.Generation
                                 Syntax.OptionalValue(fieldName),
                                 Syntax.ThisDot(propertyName)))) :
                     Syntax.OptionalIsDefined(fieldName);
-            Func<MetaField, ExpressionSyntax> isChanged = v => isChangedByNames(v.NameAsProperty, v.NameAsField, v.Symbol.Type);
+            Func<MetaField, ExpressionSyntax> isChanged = v => isChangedByNames(v.NameAsProperty, v.NameAsField, v.Type);
             var anyChangesExpression =
                 new ExpressionSyntax[] { isChangedByNames(IdentityPropertyName, IdentityParameterName, null) }.Concat(
                     this.applyToMetaType.AllFields.Select(isChanged))
@@ -1037,7 +1068,7 @@ namespace ImmutableObjectGraph.Generation
         private static ConstructorDeclarationSyntax GetMeaningfulConstructor(TypeDeclarationSyntax applyTo)
         {
             return applyTo.Members.OfType<ConstructorDeclarationSyntax>()
-                .Where(ctor => !ctor.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword))).Single();
+                .Where(ctor => !ctor.AttributeLists.Any(al => al.Attributes.Any(a => a.Name.ToString() == "System.ObsoleteAttribute")) && !ctor.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword))).Single();
         }
 
         private static bool IsFieldRequired(IFieldSymbol fieldSymbol)
@@ -1057,6 +1088,15 @@ namespace ImmutableObjectGraph.Generation
             if (fieldSymbol != null)
             {
                 return fieldSymbol.IsStatic || fieldSymbol.IsImplicitlyDeclared || IsAttributeApplied<IgnoreAttribute>(fieldSymbol);
+            }
+            return false;
+        }
+
+        private static bool IsFieldIgnoredAttribute(IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol != null)
+            {
+                return !fieldSymbol.IsStatic && !fieldSymbol.IsImplicitlyDeclared && IsAttributeApplied<IgnoreAttribute>(fieldSymbol);
             }
             return false;
         }
@@ -1273,6 +1313,7 @@ namespace ImmutableObjectGraph.Generation
                 this.generator = codeGen;
                 this.TypeSymbol = typeSymbol;
                 this.options = null;
+                this.IsExternal = this.TypeSymbol!= null ? this.TypeSymbol.ContainingAssembly.Name != "codegen" : false;
             }
 
             public CodeGen.Options Options
@@ -1312,6 +1353,8 @@ namespace ImmutableObjectGraph.Generation
 
             public INamedTypeSymbol TypeSymbol { get; private set; }
 
+            public bool IsExternal { get; private set; }
+
             public NameSyntax TypeSyntax
             {
                 get { return GetFullyQualifiedSymbolName(this.TypeSymbol); }
@@ -1326,10 +1369,33 @@ namespace ImmutableObjectGraph.Generation
             {
                 get
                 {
-                    var that = this;
-                    return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
-                        .Where(f => !IsFieldIgnored(f))
-                        .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
+                    if (!IsExternal)
+                    {
+                        var that = this;
+                        return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
+                            .Where(f => !IsFieldIgnored(f))
+                            .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
+                    }
+                    else
+                    {
+                        var that = this;
+                        var cm = this.TypeSymbol?.GetMembers("WithCore").OfType<IMethodSymbol>().OrderByDescending(m => m.Parameters.Length).FirstOrDefault();
+                        if (cm == null)
+                            return ImmutableArray<MetaField>.Empty;
+
+                        var ot = this.generator.compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Optional<>).FullName);
+                        return cm.Parameters.Where(p => !that.HasAncestor || !that.Ancestor.LocalFields.Any(f => f.Name == p.Name)).Select(p =>
+                        {
+                            bool optional = false;
+                            ITypeSymbol pt = p.Type;
+                            if(((INamedTypeSymbol)pt).ConstructedFrom == ot)
+                            {
+                                pt = ((INamedTypeSymbol)p.Type).TypeArguments[0];
+                                optional = true;
+                            }
+                            return new MetaField(that, p, pt, optional);
+                        });
+                    }
                 }
             }
 
@@ -1338,7 +1404,7 @@ namespace ImmutableObjectGraph.Generation
                 get {
                     var that = this;
                     return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
-                        .Where(f => IsFieldIgnored(f))
+                        .Where(f => IsFieldIgnoredAttribute(f))
                         .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
                 }
             }
@@ -1671,26 +1737,43 @@ namespace ImmutableObjectGraph.Generation
         {
             private readonly MetaType metaType;
 
+            private IFieldSymbol symbol;
+            private IParameterSymbol paramSymbol;
+            private ITypeSymbol paramType;
+            private bool paramOptional;
+
             public MetaField(MetaType type, IFieldSymbol symbol)
             {
                 this.metaType = type;
-                this.Symbol = symbol;
+                this.symbol = symbol;
+                this.paramSymbol = null;
+                this.paramType = null;
+                this.paramOptional = false;
             }
 
-            public string Name => this.Symbol.Name;
+            public MetaField(MetaType type, IParameterSymbol paramSymbol, ITypeSymbol paramType, bool paramOptional)
+            {
+                this.metaType = type;
+                this.symbol = null;
+                this.paramSymbol = paramSymbol;
+                this.paramType = paramType;
+                this.paramOptional = paramOptional;
+            }
 
-            public IdentifierNameSyntax NameAsProperty => SyntaxFactory.IdentifierName(this.Symbol.Name.ToPascalCase());
+            public string Name => this.symbol?.Name ?? this.paramSymbol.Name;
+
+            public IdentifierNameSyntax NameAsProperty => SyntaxFactory.IdentifierName(this.Name.ToPascalCase());
 
             public IdentifierNameSyntax NameAsField
             {
                 get
                 {
                     Verify.Operation(!this.IsDefault, "Default instance.");
-                    return SyntaxFactory.IdentifierName(this.Symbol.Name);
+                    return SyntaxFactory.IdentifierName(this.Name);
                 }
             }
 
-            public INamespaceOrTypeSymbol Type => this.Symbol?.Type;
+            public /*INamespaceOrTypeSymbol*/ ITypeSymbol Type => this.symbol?.Type ?? this.paramType;
 
             public NameSyntax TypeSyntax => GetFullyQualifiedSymbolName(this.Type);
 
@@ -1706,13 +1789,13 @@ namespace ImmutableObjectGraph.Generation
                 }
             }
 
-            public bool IsRequired => IsFieldRequired(this.Symbol);
+            public bool IsRequired => IsExternal ? !paramOptional : IsFieldRequired(this.symbol);
 
-            public int FieldGeneration => GetFieldGeneration(this.Symbol);
+            public int FieldGeneration => GetFieldGeneration(this.symbol);//TODO param fix
 
-            public bool IsCollection => IsCollectionType(this.Symbol.Type);
+            public bool IsCollection => IsCollectionType(this.Type);
 
-            public bool IsDictionary => IsDictionaryType(this.Symbol.Type);
+            public bool IsDictionary => IsDictionaryType(this.Type);
 
             public MetaType DeclaringType
             {
@@ -1735,18 +1818,21 @@ namespace ImmutableObjectGraph.Generation
                 get { return this.Symbol.ContainingType == this.metaType.Generator.applyToSymbol; }
             }
 
-            public IFieldSymbol Symbol { get; }
+            //public IFieldSymbol Symbol { get; }
+            public ISymbol Symbol => (ISymbol)this.symbol ?? this.paramSymbol;
+
+            public bool IsExternal => this.paramSymbol != null;
 
             public DistinguisherAttribute Distinguisher
             {
                 get { return null; /* TODO */ }
             }
 
-            public ITypeSymbol ElementType => GetTypeOrCollectionMemberType(this.Symbol.Type);
+            public ITypeSymbol ElementType => GetTypeOrCollectionMemberType(this.Type);
 
-            public ITypeSymbol ElementKeyType => GetDictionaryType(this.Symbol.Type)?.TypeArguments[0];
+            public ITypeSymbol ElementKeyType => GetDictionaryType(this.Type)?.TypeArguments[0];
 
-            public ITypeSymbol ElementValueType => GetDictionaryType(this.Symbol.Type)?.TypeArguments[1];
+            public ITypeSymbol ElementValueType => GetDictionaryType(this.Type)?.TypeArguments[1];
 
             public TypeSyntax ElementTypeSyntax => GetFullyQualifiedSymbolName(this.ElementType);
 
@@ -1760,7 +1846,7 @@ namespace ImmutableObjectGraph.Generation
                 }
 
                 var that = this;
-                return type == this.Symbol.Type
+                return type == this.Type
                     || this.IsAssignableFrom(type.BaseType)
                     || type.Interfaces.Any(i => that.IsAssignableFrom(i));
             }

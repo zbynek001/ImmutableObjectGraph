@@ -3,8 +3,8 @@
     using System.Collections.Immutable;
 
     [GenerateImmutable]
-    partial class Node
+    partial class Node2
     {
-        readonly ImmutableArray<Node> children;
+        readonly ImmutableArray<Node2> children;
     }
 }

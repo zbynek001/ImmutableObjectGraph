@@ -10,10 +10,10 @@ partial class Foo
     [ImmutableObjectGraph.Generation.Ignore]
     readonly bool userField;
 
-    protected Foo()
-    {
-        this.userField = false;
-    }
+    //protected Foo()
+    //{
+    //    this.userField = false;
+    //}
 
     public bool CustomProperty { get { return this.userField; } }
 

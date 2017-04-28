@@ -57,6 +57,8 @@
                         {
                             foreach (MetaType ancestor in this.generator.applyToMetaType.Ancestors.Where(a => a.LocalFields.Any()))
                             {
+                                if (ancestor.IsExternal)
+                                    continue;
                                 this.innerMembers.Add(this.CreateToDerivedTypeOverrideMethod(derivedType, ancestor));
                             }
                         }
@@ -88,6 +90,7 @@
                     CreateWithIdentityMethodName.Identifier)
                     .AddModifiers(
                         SyntaxFactory.Token(SyntaxKind.InternalKeyword),
+                        SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),
                         SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                     .WithParameterList(
                         this.generator.CreateParameterList(

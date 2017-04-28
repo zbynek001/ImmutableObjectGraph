@@ -1,10 +1,10 @@
 ﻿[ImmutableObjectGraph.Generation.GenerateImmutable(GenerateBuilder = true)]
-partial class Empty
+partial class Empty2
 {
 }
 
 [ImmutableObjectGraph.Generation.GenerateImmutable(GenerateBuilder = true)]
-partial class NotSoEmptyDerived : Empty
+partial class NotSoEmptyDerived2 : Empty2
 {
     readonly bool oneField;
 }

@@ -8,8 +8,8 @@
     using System.Threading.Tasks;
 
     [GenerateImmutable(DefineRootedStruct = true)]
-    public partial class Tree
+    public partial class Tree3
     {
-        readonly ImmutableSortedSet<Tree> children;
+        readonly ImmutableSortedSet<Tree3> children;
     }
 }

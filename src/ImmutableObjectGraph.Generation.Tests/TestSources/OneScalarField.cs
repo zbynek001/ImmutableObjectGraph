@@ -1,5 +1,5 @@
 ﻿[ImmutableObjectGraph.Generation.GenerateImmutable]
-partial class Apple
+partial class Apple4
 {
     readonly int seeds;
 }

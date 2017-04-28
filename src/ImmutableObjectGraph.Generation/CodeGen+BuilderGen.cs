@@ -243,7 +243,7 @@
                                 SyntaxKind.NotEqualsExpression,
                                 Syntax.OptionalValue(thisField),
                                 setterValueArg)) :
-                        HasEqualityOperators(field.Symbol.Type) ?
+                        HasEqualityOperators(field.Type) ?
                             SyntaxFactory.BinaryExpression(
                                 SyntaxKind.NotEqualsExpression,
                                 thisField,
