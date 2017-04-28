@@ -24,5 +24,7 @@
         public bool DefineWithMethodsPerProperty { get; set; }
 
         public bool ProtectedWithers { get; set; }
+
+        public bool AllFieldsRequired { get; set; }
     }
 }

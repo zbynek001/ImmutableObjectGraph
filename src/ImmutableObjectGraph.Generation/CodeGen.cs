@@ -43,6 +43,8 @@ namespace ImmutableObjectGraph.Generation
         private static readonly IdentifierNameSyntax InitializeDefaultTemplateMethodName = SyntaxFactory.IdentifierName("InitializeDefaultTemplate");
         private static readonly IdentifierNameSyntax CreateMethodName = SyntaxFactory.IdentifierName("Create");
         private static readonly IdentifierNameSyntax CreateStrictMethodName = SyntaxFactory.IdentifierName("CreateStrict");
+        private static readonly AttributeSyntax ObsoleteCreateStrict = SyntaxFactory.Attribute(Syntax.GetTypeSyntax(typeof(ObsoleteAttribute))).AddArgumentListArguments(SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("Use Create method with [Required] / [Optional] attributes instead"))));
+
         private static readonly IdentifierNameSyntax NewIdentityMethodName = SyntaxFactory.IdentifierName("NewIdentity");
         private static readonly IdentifierNameSyntax WithFactoryMethodName = SyntaxFactory.IdentifierName("WithFactory");
         private static readonly IdentifierNameSyntax WithMethodName = SyntaxFactory.IdentifierName("With");
@@ -857,6 +859,7 @@ namespace ImmutableObjectGraph.Generation
                     .WithModifiers(SyntaxFactory.TokenList(
                         SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                         SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
+                    .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(ObsoleteCreateStrict))
                     .WithParameterList(CreateParameterList(fieldsGroup, ParameterStyle.Required))
                     .WithBody(body);
 
@@ -1071,9 +1074,16 @@ namespace ImmutableObjectGraph.Generation
                 .Where(ctor => !ctor.AttributeLists.Any(al => al.Attributes.Any(a => a.Name.ToString() == "System.ObsoleteAttribute")) && !ctor.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword))).Single();
         }
 
-        private static bool IsFieldRequired(IFieldSymbol fieldSymbol)
+        //private static bool IsFieldRequired(IFieldSymbol fieldSymbol)
+        //{
+        //    return IsAttributeApplied<RequiredAttribute>(fieldSymbol);
+        //}
+        private static bool IsFieldRequired(MetaField field)
         {
-            return IsAttributeApplied<RequiredAttribute>(fieldSymbol);
+            if (field.MetaType.Options.AllFieldsRequired)
+                return !IsAttributeApplied<OptionalAttribute>(field.Symbol);
+            else
+                return IsAttributeApplied<RequiredAttribute>(field.Symbol);
         }
 
         private static int GetFieldGeneration(IFieldSymbol fieldSymbol)
@@ -1236,6 +1246,8 @@ namespace ImmutableObjectGraph.Generation
             public bool DefineWithMethodsPerProperty { get; set; }
 
             public bool ProtectedWithers { get; set; }
+
+            public bool AllFieldsRequired { get; set; }
         }
 
         protected abstract class FeatureGenerator
@@ -1338,7 +1350,8 @@ namespace ImmutableObjectGraph.Generation
                                 DefineInterface = GetBoolData(nameof(GenerateImmutableAttribute.DefineInterface)),
                                 DefineRootedStruct = GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
                                 DefineWithMethodsPerProperty = GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty)),
-                                ProtectedWithers = GetBoolData(nameof(GenerateImmutableAttribute.ProtectedWithers))
+                                ProtectedWithers = GetBoolData(nameof(GenerateImmutableAttribute.ProtectedWithers)),
+                                AllFieldsRequired = GetBoolData(nameof(GenerateImmutableAttribute.AllFieldsRequired))
                             };
                         }
                     }
@@ -1760,6 +1773,7 @@ namespace ImmutableObjectGraph.Generation
                 this.paramOptional = paramOptional;
             }
 
+            public MetaType MetaType => this.metaType;
             public string Name => this.symbol?.Name ?? this.paramSymbol.Name;
 
             public IdentifierNameSyntax NameAsProperty => SyntaxFactory.IdentifierName(this.Name.ToPascalCase());
@@ -1789,7 +1803,7 @@ namespace ImmutableObjectGraph.Generation
                 }
             }
 
-            public bool IsRequired => IsExternal ? !paramOptional : IsFieldRequired(this.symbol);
+            public bool IsRequired => IsExternal ? !paramOptional : IsFieldRequired(this);
 
             public int FieldGeneration => GetFieldGeneration(this.symbol);//TODO param fix
 

@@ -14,7 +14,7 @@
     <PackageProjectUrl>https://github.com/aarnott/immutableobjectgraph</PackageProjectUrl>
     <Copyright>Copyright © Andrew Arnott</Copyright>
     <PackageTags>immutable</PackageTags>
-    <Version>1.1.137-betaZ</Version>
+    <Version>1.1.138-betaZ</Version>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CodeGeneration.Roslyn.Attributes" Version="0.3.9" />
