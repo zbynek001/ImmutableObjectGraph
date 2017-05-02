@@ -397,9 +397,12 @@ namespace ImmutableObjectGraph.Generation
                     )
                 ))
                 .WithModifiers(SyntaxFactory.TokenList(
-                    SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),
                     SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
                 .WithBody(body);
+
+            if(!this.isSealed)
+                method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
+
             return method;
         }
 
@@ -655,7 +658,6 @@ namespace ImmutableObjectGraph.Generation
                 var method = SyntaxFactory.MethodDeclaration(
                     SyntaxFactory.IdentifierName(this.applyTo.Identifier),
                     GetGenerationalMethodName(WithMethodName, fieldsGroup.Key).Identifier)
-                    .AddModifiers(SyntaxFactory.Token(options.ProtectedWithers ? SyntaxKind.ProtectedKeyword : SyntaxKind.PublicKeyword))
                     .WithParameterList(CreateParameterList(fieldsGroup, ParameterStyle.Optional))
                     .WithBody(SyntaxFactory.Block(
                         SyntaxFactory.ReturnStatement(
@@ -664,6 +666,10 @@ namespace ImmutableObjectGraph.Generation
                                 SyntaxFactory.InvocationExpression(
                                     Syntax.ThisDot(WithCoreMethodName),
                                     this.CreateArgumentList(fieldsGroup, ArgSource.Argument))))));
+                if(!options.ProtectedWithers)
+                    method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+                else if(!this.isSealed)
+                    method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
 
                 if (!this.applyToMetaType.LocalFields.Any())
                 {

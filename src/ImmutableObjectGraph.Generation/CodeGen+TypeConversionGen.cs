@@ -90,7 +90,6 @@
                     CreateWithIdentityMethodName.Identifier)
                     .AddModifiers(
                         SyntaxFactory.Token(SyntaxKind.InternalKeyword),
-                        SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),
                         SyntaxFactory.Token(SyntaxKind.StaticKeyword))
                     .WithParameterList(
                         this.generator.CreateParameterList(
@@ -105,6 +104,10 @@
                                 IdentityParameterName,
                                 SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))),
                         SyntaxFactory.ReturnStatement(returnExpression)));
+
+                if (!this.generator.isSealed)
+                    method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
+
 
                 // BUG: the condition should be if there are local fields on *any* ancestor
                 // from the closest non-abstract ancestor (exclusive) to this type (inclusive).

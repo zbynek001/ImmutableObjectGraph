@@ -43,8 +43,6 @@
                         GetFullyQualifiedSymbolName(this.generator.applyToSymbol),
                         WithPropertyMethodPrefix + field.Name.ToPascalCase())
                         .WithAdditionalAnnotations()
-                        .AddModifiers(
-                            SyntaxFactory.Token(this.generator.options.ProtectedWithers ? SyntaxKind.ProtectedKeyword : SyntaxKind.PublicKeyword))
                         .AddParameterListParameters(
                             SyntaxFactory.Parameter(valueParameterName.Identifier)
                                 .WithType(GetFullyQualifiedSymbolName(field.Type)))
@@ -69,6 +67,11 @@
                                                 NoneToken,
                                                 Syntax.OptionalFor(valueParameterName))))))));
 
+                    if (!this.generator.options.ProtectedWithers)
+                        withPropertyMethod = withPropertyMethod.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+                    else if (!this.generator.isSealed)
+                        withPropertyMethod = withPropertyMethod.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
+
                     this.innerMembers.Add(withPropertyMethod);
                 }
 
@@ -79,8 +82,7 @@
                         GetFullyQualifiedSymbolName(this.generator.applyToSymbol),
                         withMethodName)
                         .AddModifiers(
-                            SyntaxFactory.Token(SyntaxKind.NewKeyword),
-                            SyntaxFactory.Token(this.generator.options.ProtectedWithers ? SyntaxKind.ProtectedKeyword : SyntaxKind.PublicKeyword))
+                            SyntaxFactory.Token(SyntaxKind.NewKeyword))
                         .AddParameterListParameters(
                             SyntaxFactory.Parameter(valueParameterName.Identifier)
                                 .WithType(GetFullyQualifiedSymbolName(field.Type)))
@@ -94,6 +96,11 @@
                                             SyntaxFactory.BaseExpression(),
                                             SyntaxFactory.IdentifierName(withMethodName)),
                                         SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(valueParameterName))))))));
+
+                    if (!this.generator.options.ProtectedWithers)
+                        withPropertyMethod = withPropertyMethod.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
+                    else if (!this.generator.isSealed)
+                        withPropertyMethod = withPropertyMethod.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
 
                     this.innerMembers.Add(withPropertyMethod);
                 }
