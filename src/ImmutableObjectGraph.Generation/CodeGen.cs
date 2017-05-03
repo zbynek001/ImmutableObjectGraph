@@ -536,7 +536,7 @@ namespace ImmutableObjectGraph.Generation
                                 Syntax.JoinSyntaxNodes(
                                     SyntaxKind.CommaToken,
                                     this.applyToMetaType.AllLocalFields.Select(f =>
-                                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), f.NameAsField)
+                                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
                                     ))))));
 
                 body = body.AddStatements(
@@ -600,7 +600,7 @@ namespace ImmutableObjectGraph.Generation
                             Syntax.JoinSyntaxNodes(
                                 SyntaxKind.CommaToken,
                                 this.applyToMetaType.AllLocalFields.Select(f =>
-                                    SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), f.NameAsField)
+                                    SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
                                 ))))));
 
             body = body.AddStatements(
@@ -727,6 +727,7 @@ namespace ImmutableObjectGraph.Generation
                 {
                     var overrideMethod = SyntaxFactory.MethodDeclaration(
                         SyntaxFactory.IdentifierName(ancestor.TypeSymbol.Name),
+                        //GetFullyQualifiedSymbolName(ancestor.TypeSymbol),
                         WithCoreMethodName.Identifier)
                         .AddModifiers(
                             SyntaxFactory.Token(SyntaxKind.ProtectedKeyword),

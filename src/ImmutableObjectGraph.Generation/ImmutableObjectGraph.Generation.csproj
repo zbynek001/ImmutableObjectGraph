@@ -16,7 +16,7 @@
     <PackageProjectUrl>https://github.com/aarnott/immutableobjectgraph</PackageProjectUrl>
     <Copyright>Copyright © Andrew Arnott</Copyright>
     <PackageTags>immutable</PackageTags>
-    <Version>1.1.139-betaZ</Version>
+    <Version>1.1.140-betaZ</Version>
 
 
     <!-- We're going to include it by virtue of sending the whole bin dir to the build folder. -->
