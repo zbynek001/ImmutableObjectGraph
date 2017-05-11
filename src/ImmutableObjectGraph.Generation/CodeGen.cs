@@ -42,9 +42,6 @@ namespace ImmutableObjectGraph.Generation
         private static readonly IdentifierNameSyntax CreateDefaultTemplateMethodName = SyntaxFactory.IdentifierName("CreateDefaultTemplate");
         private static readonly IdentifierNameSyntax InitializeDefaultTemplateMethodName = SyntaxFactory.IdentifierName("InitializeDefaultTemplate");
         private static readonly IdentifierNameSyntax CreateMethodName = SyntaxFactory.IdentifierName("Create");
-        private static readonly IdentifierNameSyntax CreateStrictMethodName = SyntaxFactory.IdentifierName("CreateStrict");
-        private static readonly AttributeSyntax ObsoleteCreateStrict = SyntaxFactory.Attribute(Syntax.GetTypeSyntax(typeof(ObsoleteAttribute))).AddArgumentListArguments(SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("Use Create method with [Required] / [Optional] attributes instead"))));
-
         private static readonly IdentifierNameSyntax NewIdentityMethodName = SyntaxFactory.IdentifierName("NewIdentity");
         private static readonly IdentifierNameSyntax WithFactoryMethodName = SyntaxFactory.IdentifierName("WithFactory");
         private static readonly IdentifierNameSyntax WithMethodName = SyntaxFactory.IdentifierName("With");
@@ -830,53 +827,6 @@ namespace ImmutableObjectGraph.Generation
                 }
 
                 yield return method;
-
-
-
-
-                body = SyntaxFactory.Block();
-                if (fieldsGroup.Any())
-                {
-                    body = body.AddStatements(
-                        // var identity = Optional.For(NewIdentity());
-                        SyntaxFactory.LocalDeclarationStatement(SyntaxFactory.VariableDeclaration(
-                            varType,
-                            SyntaxFactory.SingletonSeparatedList(
-                                SyntaxFactory.VariableDeclarator(IdentityParameterName.Identifier)
-                                    .WithInitializer(SyntaxFactory.EqualsValueClause(Syntax.OptionalFor(SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList()))))))),
-                        SyntaxFactory.ReturnStatement(
-                            SyntaxFactory.InvocationExpression(
-                                SyntaxFactory.MemberAccessExpression(
-                                    SyntaxKind.SimpleMemberAccessExpression,
-                                    DefaultInstanceFieldName,
-                                    WithFactoryMethodName),
-                                CreateArgumentList(fieldsGroup, ArgSource.Argument, OptionalStyle.Always)
-                                //CreateArgumentList(fieldsGroup, ArgSource.OptionalArgumentOrTemplate, asOptional: OptionalStyle.Always)
-                                    .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName)))));
-                }
-                else
-                {
-                    body = body.AddStatements(
-                        SyntaxFactory.ReturnStatement(DefaultInstanceFieldName));
-                }
-
-                method = SyntaxFactory.MethodDeclaration(
-                    SyntaxFactory.IdentifierName(applyTo.Identifier),
-                    GetGenerationalMethodName(CreateStrictMethodName, fieldsGroup.Key).Identifier)
-                    .WithModifiers(SyntaxFactory.TokenList(
-                        SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-                        SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
-                    .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(ObsoleteCreateStrict))
-                    .WithParameterList(CreateParameterList(fieldsGroup, ParameterStyle.Required))
-                    .WithBody(body);
-
-                if (this.applyToMetaType.Ancestors.Any(a => !a.TypeSymbol.IsAbstract && a.AllFieldsByGeneration.FirstOrDefault(g => g.Key == fieldsGroup.Key)?.Count() == fieldsGroup.Count()))
-                {
-                    method = Syntax.AddNewKeyword(method);
-                }
-
-                yield return method;
-
             }
         }
 
