@@ -1521,11 +1521,13 @@ namespace ImmutableObjectGraph.Generation
                     }
 
                     var that = this;
-                    return from type in this.generator.TypesInInputDocument
-                           where type != that.TypeSymbol
-                           let metaType = new MetaType(that.generator, type)
-                           where metaType.Ancestors.Any(a => a.TypeSymbol == that.TypeSymbol)
-                           select metaType;
+                    return this.generator.compilation.GetSymbolsWithName(_ => true).OfType<INamedTypeSymbol>().Select(type => new MetaType(that.generator, type)).Where(mt => mt.Ancestors.Any(a => a.TypeSymbol == that.TypeSymbol));
+
+                    //return from type in this.generator.TypesInInputDocument
+                    //       where type != that.TypeSymbol
+                    //       let metaType = new MetaType(that.generator, type)
+                    //       where metaType.Ancestors.Any(a => a.TypeSymbol == that.TypeSymbol)
+                    //       select metaType;
                 }
             }
 
