@@ -26,5 +26,7 @@
         public bool ProtectedWithers { get; set; }
 
         public bool AllFieldsRequired { get; set; }
+
+        public bool EnableRecursiveSupport { get; set; }
     }
 }

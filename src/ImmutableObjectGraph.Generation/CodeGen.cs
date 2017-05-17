@@ -1205,6 +1205,8 @@ namespace ImmutableObjectGraph.Generation
             public bool ProtectedWithers { get; set; }
 
             public bool AllFieldsRequired { get; set; }
+
+            public bool EnableRecursiveSupport { get; set; }
         }
 
         protected abstract class FeatureGenerator
@@ -1308,7 +1310,8 @@ namespace ImmutableObjectGraph.Generation
                                 DefineRootedStruct = GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
                                 DefineWithMethodsPerProperty = GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty)),
                                 ProtectedWithers = GetBoolData(nameof(GenerateImmutableAttribute.ProtectedWithers)),
-                                AllFieldsRequired = GetBoolData(nameof(GenerateImmutableAttribute.AllFieldsRequired))
+                                AllFieldsRequired = GetBoolData(nameof(GenerateImmutableAttribute.AllFieldsRequired)),
+                                EnableRecursiveSupport = GetBoolData(nameof(GenerateImmutableAttribute.EnableRecursiveSupport))
                             };
                         }
                     }
@@ -1535,6 +1538,8 @@ namespace ImmutableObjectGraph.Generation
             {
                 get
                 {
+                    if (!Options.EnableRecursiveSupport)
+                        return default(MetaField);
                     var allowedElementTypes = this.ThisTypeAndAncestors;
                     var matches = this.LocalFields.Where(f => f.IsCollection && !f.IsDefinitelyNotRecursive && allowedElementTypes.Any(t => t.TypeSymbol.Equals(f.ElementType))).ToList();
                     return matches.Count == 1 ? matches.First() : default(MetaField);
@@ -1555,6 +1560,8 @@ namespace ImmutableObjectGraph.Generation
             {
                 get
                 {
+                    if (!Options.EnableRecursiveSupport)
+                        return false;
                     var that = this;
                     return this.GetTypeFamily().Any(t => that.Equals(t.RecursiveType));
                 }
@@ -1574,6 +1581,9 @@ namespace ImmutableObjectGraph.Generation
             {
                 get
                 {
+                    if (!Options.EnableRecursiveSupport)
+                        return default(MetaType);
+
                     var that = this;
                     var result = this.GetTypeFamily().SingleOrDefault(t => !t.RecursiveType.IsDefault && t.RecursiveType.IsAssignableFrom(that.TypeSymbol));
                     return result;
@@ -1582,15 +1592,15 @@ namespace ImmutableObjectGraph.Generation
 
             public bool IsRecursiveParent
             {
-                get { return this.Equals(this.RecursiveParent); }
+                get { return Options.EnableRecursiveSupport && this.Equals(this.RecursiveParent); }
             }
 
             public bool IsRecursiveParentOrDerivative
             {
-                get { return this.IsRecursiveParent || this.Ancestors.Any(a => a.IsRecursiveParent); }
+                get { return Options.EnableRecursiveSupport && (this.IsRecursiveParent || this.Ancestors.Any(a => a.IsRecursiveParent)); }
             }
 
-            public bool IsRecursive => !this.RecursiveField.IsDefault;
+            public bool IsRecursive => Options.EnableRecursiveSupport && !this.RecursiveField.IsDefault;
 
             public MetaType RootAncestorOrThisType
             {

@@ -38,7 +38,8 @@
                 DefineRootedStruct = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineRootedStruct)),
                 DefineWithMethodsPerProperty = this.GetBoolData(nameof(GenerateImmutableAttribute.DefineWithMethodsPerProperty)),
                 ProtectedWithers = this.GetBoolData(nameof(GenerateImmutableAttribute.ProtectedWithers)),
-                AllFieldsRequired = this.GetBoolData(nameof(GenerateImmutableAttribute.AllFieldsRequired))
+                AllFieldsRequired = this.GetBoolData(nameof(GenerateImmutableAttribute.AllFieldsRequired)),
+                EnableRecursiveSupport = GetBoolData(nameof(GenerateImmutableAttribute.EnableRecursiveSupport))
             };
 
             return CodeGen.GenerateAsync((ClassDeclarationSyntax)applyTo, compilation, progress, options, cancellationToken);
