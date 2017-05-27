@@ -120,7 +120,7 @@ namespace ImmutableObjectGraph.Generation
             this.semanticModel = compilation.GetSemanticModel(applyTo.SyntaxTree, true);
 
             var gia = compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Generation.GenerateImmutableAttribute).FullName);
-            if(!((ClassDeclarationSyntax)applyTo).AttributeLists.Any(al => al.Attributes.Any(a => semanticModel.GetSymbolInfo(a).Symbol.ContainingType == gia)))
+            if(!((ClassDeclarationSyntax)applyTo).AttributeLists.Any(al => al.Attributes.Any(a => semanticModel.GetSymbolInfo(a).Symbol?.ContainingType == gia)))
                 return Task.FromResult(SyntaxFactory.List<MemberDeclarationSyntax>());
 
             this.isAbstract = applyTo.Modifiers.Any(m => m.IsKind(SyntaxKind.AbstractKeyword));
