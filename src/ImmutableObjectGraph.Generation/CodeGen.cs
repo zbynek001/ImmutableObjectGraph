@@ -35,7 +35,8 @@ namespace ImmutableObjectGraph.Generation
         private static readonly ParameterSyntax OptionalIdentityParameter = Syntax.Optional(RequiredIdentityParameter);
         private static readonly ArgumentSyntax OptionalIdentityArgument = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName);
         private static readonly ArgumentSyntax RequiredIdentityArgumentFromProperty = SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, Syntax.ThisDot(IdentityPropertyName));
-        private static readonly IdentifierNameSyntax DefaultInstanceFieldName = SyntaxFactory.IdentifierName("DefaultInstance");
+        private static readonly IdentifierNameSyntax DefaultInstanceFieldHolderName = SyntaxFactory.IdentifierName("defaultInstance");
+        private static readonly IdentifierNameSyntax DefaultInstancePropertyName = SyntaxFactory.IdentifierName("DefaultInstance");
         private static readonly IdentifierNameSyntax GetDefaultTemplateMethodName = SyntaxFactory.IdentifierName("GetDefaultTemplate");
         private static readonly IdentifierNameSyntax varType = SyntaxFactory.IdentifierName("var");
         private static readonly IdentifierNameSyntax NestedTemplateTypeName = SyntaxFactory.IdentifierName("Template");
@@ -120,7 +121,7 @@ namespace ImmutableObjectGraph.Generation
             this.semanticModel = compilation.GetSemanticModel(applyTo.SyntaxTree, true);
 
             var gia = compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Generation.GenerateImmutableAttribute).FullName);
-            if(!((ClassDeclarationSyntax)applyTo).AttributeLists.Any(al => al.Attributes.Any(a => semanticModel.GetSymbolInfo(a).Symbol?.ContainingType == gia)))
+            if (!((ClassDeclarationSyntax)applyTo).AttributeLists.Any(al => al.Attributes.Any(a => semanticModel.GetSymbolInfo(a).Symbol?.ContainingType == gia)))
                 return Task.FromResult(SyntaxFactory.List<MemberDeclarationSyntax>());
 
             this.isAbstract = applyTo.Modifiers.Any(m => m.IsKind(SyntaxKind.AbstractKeyword));
@@ -156,6 +157,7 @@ namespace ImmutableObjectGraph.Generation
                 }
 
                 innerMembers.Add(CreateDefaultInstanceField());
+                innerMembers.Add(CreateDefaultInstanceProperty());
                 innerMembers.Add(CreateGetDefaultTemplateMethod());
                 innerMembers.Add(CreateCreateDefaultTemplatePartialMethod());
                 innerMembers.Add(CreateTemplateStruct());
@@ -166,7 +168,8 @@ namespace ImmutableObjectGraph.Generation
             innerMembers.Add(CreateInitializeAllMethod());
             innerMembers.Add(CreateInitializeMethod());
 
-            if (!isAbstract) {
+            if (!isAbstract)
+            {
                 innerMembers.Add(CreateValidateMethod());
             }
 
@@ -307,21 +310,67 @@ namespace ImmutableObjectGraph.Generation
 
         private MemberDeclarationSyntax CreateDefaultInstanceField()
         {
+
             // [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             // private static readonly <#= templateType.TypeName #> DefaultInstance = GetDefaultTemplate();
             var field = SyntaxFactory.FieldDeclaration(
                  SyntaxFactory.VariableDeclaration(
                      SyntaxFactory.IdentifierName(this.applyTo.Identifier.ValueText),
                      SyntaxFactory.SingletonSeparatedList(
-                         SyntaxFactory.VariableDeclarator(DefaultInstanceFieldName.Identifier)
-                             .WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.InvocationExpression(GetDefaultTemplateMethodName, SyntaxFactory.ArgumentList()))))))
+                         SyntaxFactory.VariableDeclarator(DefaultInstanceFieldHolderName.Identifier)
+                             //.WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.InvocationExpression(GetDefaultTemplateMethodName, SyntaxFactory.ArgumentList())))
+                             )))
                  .WithModifiers(SyntaxFactory.TokenList(
                      SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
-                     SyntaxFactory.Token(SyntaxKind.StaticKeyword),
-                     SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)))
+                     SyntaxFactory.Token(SyntaxKind.StaticKeyword)/*,
+                     SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword)*/))
                  .WithAttributeLists(SyntaxFactory.SingletonList(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
                      DebuggerBrowsableNeverAttribute))));
             return field;
+        }
+
+        private MemberDeclarationSyntax CreateDefaultInstanceProperty()
+        {
+            return SyntaxFactory.PropertyDeclaration(SyntaxFactory.IdentifierName(applyTo.Identifier.ValueText), DefaultInstancePropertyName.Identifier)
+                .WithModifiers(SyntaxFactory.TokenList(
+                     SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                     SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
+
+
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                        .WithBody(SyntaxFactory.Block(
+                            SyntaxFactory.IfStatement(
+                                SyntaxFactory.BinaryExpression(
+                                    SyntaxKind.EqualsExpression,
+                                    DefaultInstanceFieldHolderName,
+                                    SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
+                                ),
+                                SyntaxFactory.LockStatement(
+                                    SyntaxFactory.TypeOfExpression(SyntaxFactory.IdentifierName(applyTo.Identifier.ValueText)),
+                                    SyntaxFactory.IfStatement(
+                                        SyntaxFactory.BinaryExpression(
+                                            SyntaxKind.EqualsExpression,
+                                            DefaultInstanceFieldHolderName,
+                                            SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
+                                        ),
+                                        SyntaxFactory.ExpressionStatement(
+                                            SyntaxFactory.AssignmentExpression(
+                                                SyntaxKind.SimpleAssignmentExpression,
+                                                DefaultInstanceFieldHolderName,
+                                                SyntaxFactory.InvocationExpression(GetDefaultTemplateMethodName, SyntaxFactory.ArgumentList())
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            SyntaxFactory.ReturnStatement(
+                                DefaultInstanceFieldHolderName
+                            )
+                        ))
+                    //.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                    //SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                );
         }
 
         private MemberDeclarationSyntax CreateCreateDefaultTemplatePartialMethod()
@@ -397,7 +446,7 @@ namespace ImmutableObjectGraph.Generation
                     SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
                 .WithBody(body);
 
-            if(!this.isSealed)
+            if (!this.isSealed)
                 method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
 
             return method;
@@ -557,7 +606,8 @@ namespace ImmutableObjectGraph.Generation
                     .AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(ObsoletePublicCtor))
                     .WithBody(body);
 
-                if (!this.isSealed) {
+                if (!this.isSealed)
+                {
                     ctor = ctor
                         .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword)));
                 }
@@ -663,9 +713,9 @@ namespace ImmutableObjectGraph.Generation
                                 SyntaxFactory.InvocationExpression(
                                     Syntax.ThisDot(WithCoreMethodName),
                                     this.CreateArgumentList(fieldsGroup, ArgSource.Argument))))));
-                if(!options.ProtectedWithers)
+                if (!options.ProtectedWithers)
                     method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword));
-                else if(!this.isSealed)
+                else if (!this.isSealed)
                     method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
 
                 if (!this.applyToMetaType.LocalFields.Any())
@@ -801,7 +851,7 @@ namespace ImmutableObjectGraph.Generation
                             SyntaxFactory.InvocationExpression(
                                 SyntaxFactory.MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
-                                    DefaultInstanceFieldName,
+                                    DefaultInstancePropertyName,
                                     WithFactoryMethodName),
                                 CreateArgumentList(fieldsGroup, ArgSource.OptionalArgumentOrTemplate, asOptional: OptionalStyle.Always)
                                     .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, IdentityParameterName)))));
@@ -809,7 +859,7 @@ namespace ImmutableObjectGraph.Generation
                 else
                 {
                     body = body.AddStatements(
-                        SyntaxFactory.ReturnStatement(DefaultInstanceFieldName));
+                        SyntaxFactory.ReturnStatement(DefaultInstancePropertyName));
                 }
 
                 var method = SyntaxFactory.MethodDeclaration(
@@ -1000,7 +1050,7 @@ namespace ImmutableObjectGraph.Generation
                     case ArgSource.OptionalArgumentOrPropertyExceptWhenRequired:
                         return f.IsRequired ? (ExpressionSyntax)name : Syntax.OptionalGetValueOrDefault(name, Syntax.ThisDot(propertyName));
                     case ArgSource.OptionalArgumentOrTemplate:
-                        return Syntax.OptionalGetValueOrDefault(name, SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstanceFieldName, propertyName));
+                        return Syntax.OptionalGetValueOrDefault(name, SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, propertyName));
                     case ArgSource.Missing:
                         return SyntaxFactory.DefaultExpression(Syntax.OptionalOf(GetFullyQualifiedSymbolName(f.Type)));
                     default:
@@ -1284,7 +1334,7 @@ namespace ImmutableObjectGraph.Generation
                 this.generator = codeGen;
                 this.TypeSymbol = typeSymbol;
                 this.options = null;
-                this.IsExternal = this.TypeSymbol!= null ? this.TypeSymbol.ContainingAssembly.Name != "codegen" : false;
+                this.IsExternal = this.TypeSymbol != null ? this.TypeSymbol.ContainingAssembly.Name != "codegen" : false;
             }
 
             public CodeGen.Options Options
@@ -1361,7 +1411,7 @@ namespace ImmutableObjectGraph.Generation
                         {
                             bool optional = false;
                             ITypeSymbol pt = p.Type;
-                            if(((INamedTypeSymbol)pt).ConstructedFrom == ot)
+                            if (((INamedTypeSymbol)pt).ConstructedFrom == ot)
                             {
                                 pt = ((INamedTypeSymbol)p.Type).TypeArguments[0];
                                 optional = true;
@@ -1374,7 +1424,8 @@ namespace ImmutableObjectGraph.Generation
 
             public IEnumerable<MetaField> LocalFieldsIgnored
             {
-                get {
+                get
+                {
                     var that = this;
                     return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
                         .Where(f => IsFieldIgnoredAttribute(f))
@@ -1384,12 +1435,15 @@ namespace ImmutableObjectGraph.Generation
 
             public IEnumerable<MetaField> AllLocalFields
             {
-                get {
-                    foreach (var field in this.LocalFields) {
+                get
+                {
+                    foreach (var field in this.LocalFields)
+                    {
                         yield return field;
                     }
 
-                    foreach (var field in this.LocalFieldsIgnored) {
+                    foreach (var field in this.LocalFieldsIgnored)
+                    {
                         yield return field;
                     }
                 }

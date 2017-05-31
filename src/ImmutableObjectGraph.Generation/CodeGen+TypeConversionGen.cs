@@ -73,7 +73,7 @@
 
             private MemberDeclarationSyntax CreateCreateWithIdentityMethod()
             {
-                ExpressionSyntax returnExpression = DefaultInstanceFieldName;
+                ExpressionSyntax returnExpression = DefaultInstancePropertyName;
                 if (this.generator.applyToMetaType.LocalFields.Any())
                 {
                     returnExpression = SyntaxFactory.InvocationExpression(
