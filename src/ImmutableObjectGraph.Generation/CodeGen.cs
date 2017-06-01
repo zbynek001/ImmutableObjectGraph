@@ -49,7 +49,11 @@ namespace ImmutableObjectGraph.Generation
         private static readonly IdentifierNameSyntax WithCoreMethodName = SyntaxFactory.IdentifierName("WithCore");
         private static readonly IdentifierNameSyntax LastIdentityProducedFieldName = SyntaxFactory.IdentifierName("lastIdentityProduced");
         private static readonly IdentifierNameSyntax InitializeMethodName = SyntaxFactory.IdentifierName("Initialize");
-        private static readonly IdentifierNameSyntax InitializeAllMethodName = SyntaxFactory.IdentifierName("InitializeAll");
+
+        private static readonly IdentifierNameSyntax InitializePublicMethodName = SyntaxFactory.IdentifierName("InitializePublic");
+        private static readonly IdentifierNameSyntax InitializeInternalMethodName = SyntaxFactory.IdentifierName("InitializeInternal");
+        private static readonly IdentifierNameSyntax InitializeIgnoredMethodName = SyntaxFactory.IdentifierName("InitializeIgnored");
+
         private static readonly IdentifierNameSyntax ValidateMethodName = SyntaxFactory.IdentifierName("Validate");
         private static readonly IdentifierNameSyntax SkipValidationParameterName = SyntaxFactory.IdentifierName("skipValidation");
         private static readonly AttributeSyntax DebuggerBrowsableNeverAttribute = SyntaxFactory.Attribute(
@@ -165,7 +169,9 @@ namespace ImmutableObjectGraph.Generation
             }
             innerMembers.Add(CreateInitializeDefaultTemplateMethod());
 
-            innerMembers.Add(CreateInitializeAllMethod());
+            innerMembers.Add(CreateInitializeIgnoredMethod());
+            innerMembers.Add(CreateInitializeInternalMethod());
+            innerMembers.Add(CreateInitializePublicMethod());
             innerMembers.Add(CreateInitializeMethod());
 
             if (!isAbstract)
@@ -178,7 +184,7 @@ namespace ImmutableObjectGraph.Generation
                 innerMembers.AddRange(CreateWithMethods());
             }
 
-            innerMembers.AddRange(this.GetFieldVariables().Select(fv => CreatePropertyForField(fv.Key, fv.Value)));
+            innerMembers.AddRange((this.GetFieldVariables().Union(GetFieldVariablesInternal())).Select(fv => CreatePropertyForField(fv.Key, fv.Value)));
 
             this.MergeFeature(new BuilderGen(this));
             this.MergeFeature(new DeltaGen(this));
@@ -574,14 +580,38 @@ namespace ImmutableObjectGraph.Generation
                 }
 
                 body = body.AddStatements(
-                    // this.InitializeAll(...);
+                    // this.InitializeIgnored(...);
                     SyntaxFactory.ExpressionStatement(
                         SyntaxFactory.InvocationExpression(
-                            Syntax.ThisDot(InitializeAllMethodName),
+                            Syntax.ThisDot(InitializeIgnoredMethodName),
                             SyntaxFactory.ArgumentList(
                                 Syntax.JoinSyntaxNodes(
                                     SyntaxKind.CommaToken,
-                                    this.applyToMetaType.AllLocalFields.Select(f =>
+                                    this.applyToMetaType.LocalFieldsIgnored.Select(f =>
+                                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
+                                    ))))));
+
+                body = body.AddStatements(
+                    // this.InitializeInternal(...);
+                    SyntaxFactory.ExpressionStatement(
+                        SyntaxFactory.InvocationExpression(
+                            Syntax.ThisDot(InitializeInternalMethodName),
+                            SyntaxFactory.ArgumentList(
+                                Syntax.JoinSyntaxNodes(
+                                    SyntaxKind.CommaToken,
+                                    this.applyToMetaType.LocalFieldsInternal.Select(f =>
+                                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
+                                    ))))));
+
+                body = body.AddStatements(
+                    // this.InitializeAll(...);
+                    SyntaxFactory.ExpressionStatement(
+                        SyntaxFactory.InvocationExpression(
+                            Syntax.ThisDot(InitializePublicMethodName),
+                            SyntaxFactory.ArgumentList(
+                                Syntax.JoinSyntaxNodes(
+                                    SyntaxKind.CommaToken,
+                                    this.applyToMetaType.LocalFields.Select(f =>
                                         SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
                                     ))))));
 
@@ -639,14 +669,38 @@ namespace ImmutableObjectGraph.Generation
             }
 
             body = body.AddStatements(
-                // this.InitializeAll(...);
+                // this.InitializeIgnored(...);
                 SyntaxFactory.ExpressionStatement(
                     SyntaxFactory.InvocationExpression(
-                        Syntax.ThisDot(InitializeAllMethodName),
+                        Syntax.ThisDot(InitializeIgnoredMethodName),
                         SyntaxFactory.ArgumentList(
                             Syntax.JoinSyntaxNodes(
                                 SyntaxKind.CommaToken,
-                                this.applyToMetaType.AllLocalFields.Select(f =>
+                                this.applyToMetaType.LocalFieldsIgnored.Select(f =>
+                                    SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
+                                ))))));
+
+            body = body.AddStatements(
+                // this.InitializeInternal(...);
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        Syntax.ThisDot(InitializeInternalMethodName),
+                        SyntaxFactory.ArgumentList(
+                            Syntax.JoinSyntaxNodes(
+                                SyntaxKind.CommaToken,
+                                this.applyToMetaType.LocalFieldsInternal.Select(f =>
+                                    SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
+                                ))))));
+
+            body = body.AddStatements(
+                // this.InitializeAll(...);
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        Syntax.ThisDot(InitializePublicMethodName),
+                        SyntaxFactory.ArgumentList(
+                            Syntax.JoinSyntaxNodes(
+                                SyntaxKind.CommaToken,
+                                this.applyToMetaType.LocalFields.Select(f =>
                                     SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
                                 ))))));
 
@@ -890,18 +944,62 @@ namespace ImmutableObjectGraph.Generation
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
         }
 
-        private MethodDeclarationSyntax CreateInitializeAllMethod()
+        private MethodDeclarationSyntax CreateInitializePublicMethod()
         {
-            //// partial void InitializeAll(...);
+            //// partial void InitializePublic(...);
             return SyntaxFactory.MethodDeclaration(
                 SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
-                InitializeAllMethodName.Identifier)
+                InitializePublicMethodName.Identifier)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
                 .WithParameterList(
                     SyntaxFactory.ParameterList(
                         Syntax.JoinSyntaxNodes(
                             SyntaxKind.CommaToken,
-                            this.applyToMetaType.AllLocalFields.Select(f =>
+                            this.applyToMetaType.LocalFields.Select(f =>
+                                SyntaxFactory.Parameter(f.NameAsField.Identifier)
+                                .WithType(f.TypeSyntax)
+                                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword)))
+                            )
+                        )
+                    )
+                )
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        }
+
+        private MethodDeclarationSyntax CreateInitializeInternalMethod()
+        {
+            //// partial void InitializeInternal(...);
+            return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                InitializeInternalMethodName.Identifier)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
+                .WithParameterList(
+                    SyntaxFactory.ParameterList(
+                        Syntax.JoinSyntaxNodes(
+                            SyntaxKind.CommaToken,
+                            this.applyToMetaType.LocalFieldsInternal.Select(f =>
+                                SyntaxFactory.Parameter(f.NameAsField.Identifier)
+                                .WithType(f.TypeSyntax)
+                                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword)))
+                            )
+                        )
+                    )
+                )
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        }
+
+        private MethodDeclarationSyntax CreateInitializeIgnoredMethod()
+        {
+            //// partial void InitializeIgnored(...);
+            return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                InitializeIgnoredMethodName.Identifier)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
+                .WithParameterList(
+                    SyntaxFactory.ParameterList(
+                        Syntax.JoinSyntaxNodes(
+                            SyntaxKind.CommaToken,
+                            this.applyToMetaType.LocalFieldsIgnored.Select(f =>
                                 SyntaxFactory.Parameter(f.NameAsField.Identifier)
                                 .WithType(f.TypeSyntax)
                                 .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword)))
@@ -998,12 +1096,29 @@ namespace ImmutableObjectGraph.Generation
         private IEnumerable<FieldDeclarationSyntax> GetFields()
         {
             return this.applyTo.ChildNodes().OfType<FieldDeclarationSyntax>()
-                .Where(f => f.Declaration.Variables.All(v => !IsFieldIgnored(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol)));
+                .Where(f => f.Declaration.Variables.All(v => !IsFieldIgnored(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol) && !IsFieldInternal(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol)));
         }
 
         private IEnumerable<KeyValuePair<FieldDeclarationSyntax, VariableDeclaratorSyntax>> GetFieldVariables()
         {
             foreach (var field in this.GetFields())
+            {
+                foreach (var variable in field.Declaration.Variables)
+                {
+                    yield return new KeyValuePair<FieldDeclarationSyntax, VariableDeclaratorSyntax>(field, variable);
+                }
+            }
+        }
+
+        private IEnumerable<FieldDeclarationSyntax> GetFieldsInternal()
+        {
+            return this.applyTo.ChildNodes().OfType<FieldDeclarationSyntax>()
+                .Where(f => f.Declaration.Variables.All(v => IsFieldInternal(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol)));
+        }
+
+        private IEnumerable<KeyValuePair<FieldDeclarationSyntax, VariableDeclaratorSyntax>> GetFieldVariablesInternal()
+        {
+            foreach (var field in this.GetFieldsInternal())
             {
                 foreach (var variable in field.Declaration.Variables)
                 {
@@ -1093,6 +1208,11 @@ namespace ImmutableObjectGraph.Generation
                 return IsAttributeApplied<RequiredAttribute>(field.Symbol);
         }
 
+        private static bool IsFieldInternal(MetaField field)
+        {
+            return IsAttributeApplied<InternalAttribute>(field.Symbol);
+        }
+
         private static int GetFieldGeneration(IFieldSymbol fieldSymbol)
         {
             AttributeData attribute = fieldSymbol?.GetAttributes().SingleOrDefault(
@@ -1105,6 +1225,15 @@ namespace ImmutableObjectGraph.Generation
             if (fieldSymbol != null)
             {
                 return fieldSymbol.IsStatic || fieldSymbol.IsImplicitlyDeclared || IsAttributeApplied<IgnoreAttribute>(fieldSymbol);
+            }
+            return false;
+        }
+
+        private static bool IsFieldInternal(IFieldSymbol fieldSymbol)
+        {
+            if (fieldSymbol != null && !fieldSymbol.IsStatic && !fieldSymbol.IsImplicitlyDeclared)
+            {
+                return IsAttributeApplied<InternalAttribute>(fieldSymbol);
             }
             return false;
         }
@@ -1396,7 +1525,7 @@ namespace ImmutableObjectGraph.Generation
                     {
                         var that = this;
                         return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
-                            .Where(f => !IsFieldIgnored(f))
+                            .Where(f => !IsFieldIgnored(f) && !IsFieldInternal(f))
                             .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
                     }
                     else
@@ -1428,7 +1557,18 @@ namespace ImmutableObjectGraph.Generation
                 {
                     var that = this;
                     return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
-                        .Where(f => IsFieldIgnoredAttribute(f))
+                        .Where(f => IsFieldIgnoredAttribute(f) && !IsFieldInternal(f))
+                        .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
+                }
+            }
+
+            public IEnumerable<MetaField> LocalFieldsInternal
+            {
+                get
+                {
+                    var that = this;
+                    return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
+                        .Where(f => IsFieldInternal(f))
                         .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
                 }
             }
@@ -1827,6 +1967,8 @@ namespace ImmutableObjectGraph.Generation
             }
 
             public bool IsRequired => IsExternal ? !paramOptional : IsFieldRequired(this);
+
+            public bool IsInternal => IsFieldInternal(this);
 
             public int FieldGeneration => GetFieldGeneration(this.symbol);//TODO param fix
 
