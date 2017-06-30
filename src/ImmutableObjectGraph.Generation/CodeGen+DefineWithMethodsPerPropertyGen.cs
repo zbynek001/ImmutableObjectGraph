@@ -37,11 +37,11 @@
             {
                 var valueParameterName = SyntaxFactory.IdentifierName("value");
 
-                foreach (var field in this.generator.applyToMetaType.LocalFields)
+                foreach (var field in this.generator.applyToMetaType.LocalFields.Where(i => !i.IsObsolete))
                 {
                     var withPropertyMethod = SyntaxFactory.MethodDeclaration(
                         GetFullyQualifiedSymbolName(this.generator.applyToSymbol),
-                        WithPropertyMethodPrefix + field.Name.ToPascalCase())
+                        WithPropertyMethodPrefix + field.NameRaw.ToPascalCase())
                         .WithAdditionalAnnotations()
                         .AddParameterListParameters(
                             SyntaxFactory.Parameter(valueParameterName.Identifier)

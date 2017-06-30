@@ -66,7 +66,7 @@ namespace ImmutableObjectGraph.Generation
         private static readonly ThrowStatementSyntax ThrowNotImplementedException = SyntaxFactory.ThrowStatement(
             SyntaxFactory.ObjectCreationExpression(SyntaxFactory.ParseTypeName(typeof(NotImplementedException).FullName), SyntaxFactory.ArgumentList(), null));
         private static readonly ArgumentSyntax DoNotSkipValidationArgument = SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.FalseLiteralExpression));
-        private static readonly AttributeSyntax ObsoletePublicCtor = SyntaxFactory.Attribute(Syntax.GetTypeSyntax(typeof(ObsoleteAttribute))).AddArgumentListArguments(SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("This constructor for use with deserializers only. Use the static Create factory method instead."))));
+        private static readonly AttributeSyntax ObsoletePublicCtor = SyntaxFactory.Attribute(Syntax.GetTypeSyntax(typeof(System.ObsoleteAttribute))).AddArgumentListArguments(SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("This constructor for use with deserializers only. Use the static Create factory method instead."))));
 
         private readonly ClassDeclarationSyntax applyTo;
         private readonly CSharpCompilation compilation;
@@ -83,6 +83,9 @@ namespace ImmutableObjectGraph.Generation
         private TypeSyntax applyToTypeName;
         private List<FeatureGenerator> mergedFeatures = new List<FeatureGenerator>();
 
+        private INamedTypeSymbol optionalType;
+        private INamedTypeSymbol obsoleteAttribute;
+
         private CodeGen(ClassDeclarationSyntax applyTo, CSharpCompilation compilation, IProgress<Diagnostic> progress, Options options, CancellationToken cancellationToken)
         {
             Requires.NotNull(applyTo, nameof(applyTo));
@@ -96,6 +99,9 @@ namespace ImmutableObjectGraph.Generation
             this.cancellationToken = cancellationToken;
 
             //this.PluralService = PluralizationService.CreateService(CultureInfo.GetCultureInfo("en-US"));
+
+            optionalType = this.compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Optional<>).FullName);
+            obsoleteAttribute = this.compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
         }
 
         //public PluralizationService PluralService { get; set; }
@@ -167,7 +173,9 @@ namespace ImmutableObjectGraph.Generation
                 innerMembers.Add(CreateTemplateStruct());
                 //innerMembers.Add(CreateValidateMethod());
             }
-            innerMembers.Add(CreateInitializeDefaultTemplateMethod());
+
+            if (this.applyToMetaType.LocalFields.Any())
+                innerMembers.Add(CreateInitializeDefaultTemplateMethod());
 
             innerMembers.Add(CreateInitializeIgnoredMethod());
             innerMembers.Add(CreateInitializeInternalMethod());
@@ -204,7 +212,30 @@ namespace ImmutableObjectGraph.Generation
 
             var partialClass = SyntaxFactory.ClassDeclaration(applyTo.Identifier)
                 .AddModifiers(SyntaxFactory.Token(SyntaxKind.PartialKeyword))
-                .WithMembers(SyntaxFactory.List(innerMembers));
+                .WithMembers(SyntaxFactory.List(innerMembers))
+                .WithLeadingTrivia(
+                    SyntaxFactory.ElasticCarriageReturnLineFeed,
+                    SyntaxFactory.Trivia(
+                        SyntaxFactory.PragmaWarningDirectiveTrivia(SyntaxFactory.Token(SyntaxKind.DisableKeyword), true)
+                        .WithErrorCodes(SyntaxFactory.SeparatedList<ExpressionSyntax>(SyntaxFactory.NodeOrTokenList(
+                            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(612)),
+                            SyntaxFactory.Token(SyntaxKind.CommaToken),
+                            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(618))
+                            )))
+                            .WithTrailingTrivia(SyntaxFactory.Space, SyntaxFactory.Comment("// obsolete warnings"))
+                            .WithEndOfDirectiveToken(SyntaxFactory.Token(SyntaxFactory.TriviaList(), SyntaxKind.EndOfDirectiveToken, SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed)))
+                        ))
+                .WithTrailingTrivia(
+                    SyntaxFactory.Trivia(
+                        SyntaxFactory.PragmaWarningDirectiveTrivia(SyntaxFactory.Token(SyntaxKind.RestoreKeyword), true)
+                        .WithErrorCodes(SyntaxFactory.SeparatedList<ExpressionSyntax>(SyntaxFactory.NodeOrTokenList(
+                            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(612)),
+                            SyntaxFactory.Token(SyntaxKind.CommaToken),
+                            SyntaxFactory.LiteralExpression(SyntaxKind.NumericLiteralExpression, SyntaxFactory.Literal(618))
+                            )))
+                        .WithEndOfDirectiveToken(SyntaxFactory.Token(SyntaxFactory.TriviaList(), SyntaxKind.EndOfDirectiveToken, SyntaxFactory.TriviaList(SyntaxFactory.ElasticCarriageReturnLineFeed)))),
+                    SyntaxFactory.ElasticCarriageReturnLineFeed);
+
 
             partialClass = this.mergedFeatures.Aggregate(partialClass, (acc, feature) => feature.ProcessApplyToClassDeclaration(acc));
             var outerMembers = SyntaxFactory.List<MemberDeclarationSyntax>();
@@ -214,7 +245,7 @@ namespace ImmutableObjectGraph.Generation
             return Task.FromResult(outerMembers);
         }
 
-        private static PropertyDeclarationSyntax CreatePropertyForField(FieldDeclarationSyntax field, VariableDeclaratorSyntax variable)
+        private PropertyDeclarationSyntax CreatePropertyForField(FieldDeclarationSyntax field, VariableDeclaratorSyntax variable)
         {
             var xmldocComment = field.GetLeadingTrivia().FirstOrDefault(t => t.IsKind(SyntaxKind.SingleLineDocumentationCommentTrivia));
 
@@ -224,10 +255,34 @@ namespace ImmutableObjectGraph.Generation
                     SyntaxFactory.ArrowExpressionClause(
                         // => this.fieldName
                         SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), SyntaxFactory.IdentifierName(variable.Identifier))))
-                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+
+            var oa = GetObsoleteAttribute(this.semanticModel.GetDeclaredSymbol(variable));
+            if (oa != null)
+                property = property.AddAttributeLists(SyntaxFactory.AttributeList().AddAttributes(oa));
+            property = property
                 .WithLeadingTrivia(xmldocComment); // TODO: modify the <summary> to translate "Some description" to "Gets some description."
+
             return property;
         }
+
+        internal static bool IsKeyword(string identifier)
+        {
+            return SyntaxFacts.GetKeywordKind(identifier) != SyntaxKind.None || SyntaxFacts.GetContextualKeywordKind(identifier) != SyntaxKind.None;
+        }
+
+        internal AttributeSyntax GetObsoleteAttribute(ISymbol symbol)
+        {
+            var oa = symbol.GetAttributes().Where(i => i.AttributeClass == obsoleteAttribute).FirstOrDefault();
+            if (oa == null)
+                return null;
+
+            var att = SyntaxFactory.Attribute(Syntax.GetTypeSyntax(typeof(System.ObsoleteAttribute)));
+            if (oa.ConstructorArguments.Length == 1)
+                att = att.AddArgumentListArguments(SyntaxFactory.AttributeArgument(SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal((string)oa.ConstructorArguments[0].Value))));
+            return att;
+        }
+
 
         private static IdentifierNameSyntax GetGenerationalMethodName(IdentifierNameSyntax baseName, int generation)
         {
@@ -374,8 +429,8 @@ namespace ImmutableObjectGraph.Generation
                                 DefaultInstanceFieldHolderName
                             )
                         ))
-                    //.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
-                    //SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                //.WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
+                //SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                 );
         }
 
@@ -1093,10 +1148,15 @@ namespace ImmutableObjectGraph.Generation
             return fields.Where(f => f.IsRequired).Concat(fields.Where(f => !f.IsRequired));
         }
 
-        private IEnumerable<FieldDeclarationSyntax> GetFields()
+        private IEnumerable<FieldDeclarationSyntax> GetFields(Func<IFieldSymbol, bool> filter)
         {
             return this.applyTo.ChildNodes().OfType<FieldDeclarationSyntax>()
-                .Where(f => f.Declaration.Variables.All(v => !IsFieldIgnored(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol) && !IsFieldInternal(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol)));
+                .Where(f => f.Declaration.Variables.All(v => filter(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol)));
+        }
+
+        private IEnumerable<FieldDeclarationSyntax> GetFields()
+        {
+            return GetFields(i => !IsFieldIgnored(i) && !IsFieldInternal(i));
         }
 
         private IEnumerable<KeyValuePair<FieldDeclarationSyntax, VariableDeclaratorSyntax>> GetFieldVariables()
@@ -1112,8 +1172,7 @@ namespace ImmutableObjectGraph.Generation
 
         private IEnumerable<FieldDeclarationSyntax> GetFieldsInternal()
         {
-            return this.applyTo.ChildNodes().OfType<FieldDeclarationSyntax>()
-                .Where(f => f.Declaration.Variables.All(v => IsFieldInternal(this.semanticModel.GetDeclaredSymbol(v) as IFieldSymbol)));
+            return GetFields(i => IsFieldInternal(i));
         }
 
         private IEnumerable<KeyValuePair<FieldDeclarationSyntax, VariableDeclaratorSyntax>> GetFieldVariablesInternal()
@@ -1196,55 +1255,46 @@ namespace ImmutableObjectGraph.Generation
                 .Where(ctor => !ctor.AttributeLists.Any(al => al.Attributes.Any(a => a.Name.ToString() == "System.ObsoleteAttribute")) && !ctor.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword))).Single();
         }
 
-        //private static bool IsFieldRequired(IFieldSymbol fieldSymbol)
-        //{
-        //    return IsAttributeApplied<RequiredAttribute>(fieldSymbol);
-        //}
-        private static bool IsFieldRequired(MetaField field)
+        private static bool IsFieldValid(IFieldSymbol fieldSymbol)
         {
-            if (field.MetaType.Options.AllFieldsRequired)
-                return !IsAttributeApplied<OptionalAttribute>(field.Symbol);
-            else
-                return IsAttributeApplied<RequiredAttribute>(field.Symbol);
+            if (fieldSymbol != null && !fieldSymbol.IsStatic && !fieldSymbol.IsImplicitlyDeclared)
+            {
+                return true;
+            }
+            return false;
         }
 
-        private static bool IsFieldInternal(MetaField field)
+        private static bool IsFieldIgnored(IFieldSymbol fieldSymbol)
         {
-            return IsAttributeApplied<InternalAttribute>(field.Symbol);
+            return IsAttributeApplied<IgnoreAttribute>(fieldSymbol);
         }
+
+        private static bool IsFieldRequired(IFieldSymbol fieldSymbol)
+        {
+            return IsAttributeApplied<RequiredAttribute>(fieldSymbol);
+        }
+
+        private static bool IsFieldOptional(IFieldSymbol fieldSymbol)
+        {
+            return IsAttributeApplied<OptionalAttribute>(fieldSymbol);
+        }
+
+        private static bool IsFieldInternal(IFieldSymbol fieldSymbol)
+        {
+            return IsAttributeApplied<InternalAttribute>(fieldSymbol);
+        }
+
+        private static bool IsFieldObsolete(ISymbol fieldSymbol)
+        {
+            return IsAttributeApplied<ObsoleteAttribute>(fieldSymbol);
+        }
+
 
         private static int GetFieldGeneration(IFieldSymbol fieldSymbol)
         {
             AttributeData attribute = fieldSymbol?.GetAttributes().SingleOrDefault(
                 a => IsOrDerivesFrom<GenerationAttribute>(a.AttributeClass));
             return (int?)attribute?.ConstructorArguments.Single().Value ?? 0;
-        }
-
-        private static bool IsFieldIgnored(IFieldSymbol fieldSymbol)
-        {
-            if (fieldSymbol != null)
-            {
-                return fieldSymbol.IsStatic || fieldSymbol.IsImplicitlyDeclared || IsAttributeApplied<IgnoreAttribute>(fieldSymbol);
-            }
-            return false;
-        }
-
-        private static bool IsFieldInternal(IFieldSymbol fieldSymbol)
-        {
-            if (fieldSymbol != null && !fieldSymbol.IsStatic && !fieldSymbol.IsImplicitlyDeclared)
-            {
-                return IsAttributeApplied<InternalAttribute>(fieldSymbol);
-            }
-            return false;
-        }
-
-        private static bool IsFieldIgnoredAttribute(IFieldSymbol fieldSymbol)
-        {
-            if (fieldSymbol != null)
-            {
-                return !fieldSymbol.IsStatic && !fieldSymbol.IsImplicitlyDeclared && IsAttributeApplied<IgnoreAttribute>(fieldSymbol);
-            }
-            return false;
         }
 
         private static bool IsAttributeApplied<T>(ISymbol symbol) where T : Attribute
@@ -1517,7 +1567,7 @@ namespace ImmutableObjectGraph.Generation
                 get { return this.TypeSymbol == null; }
             }
 
-            public IEnumerable<MetaField> LocalFields
+            public IEnumerable<MetaField> UnfilteredLocalFields
             {
                 get
                 {
@@ -1525,7 +1575,8 @@ namespace ImmutableObjectGraph.Generation
                     {
                         var that = this;
                         return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
-                            .Where(f => !IsFieldIgnored(f) && !IsFieldInternal(f))
+                            .Where(f => IsFieldValid(f))
+                            //.Where(f => !IsFieldIgnored(f) && !IsFieldInternal(f) && !IsFieldObsolete(f))
                             .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
                     }
                     else
@@ -1535,77 +1586,49 @@ namespace ImmutableObjectGraph.Generation
                         if (cm == null)
                             return ImmutableArray<MetaField>.Empty;
 
-                        var ot = this.generator.compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Optional<>).FullName);
-                        return cm.Parameters.Where(p => !that.HasAncestor || !that.Ancestor.LocalFields.Any(f => f.Name == p.Name)).Select(p =>
+                        //var ot = this.generator.compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Optional<>).FullName);
+                        return cm.Parameters.Where(p => !that.HasAncestor || !that.Ancestor.UnfilteredLocalFields.Any(f => f.Name == p.Name)).Select(p =>
                         {
                             bool optional = false;
                             ITypeSymbol pt = p.Type;
-                            if (((INamedTypeSymbol)pt).ConstructedFrom == ot)
+                            if (((INamedTypeSymbol)pt).ConstructedFrom == that.generator.optionalType)
                             {
                                 pt = ((INamedTypeSymbol)p.Type).TypeArguments[0];
                                 optional = true;
                             }
-                            return new MetaField(that, p, pt, optional);
+                            var prop = that.TypeSymbol?.GetMembers(p.Name.ToPascalCase()).OfType<IPropertySymbol>().FirstOrDefault();
+
+                            return new MetaField(that, p, pt, optional, prop);
                         });
                     }
                 }
             }
 
-            public IEnumerable<MetaField> LocalFieldsIgnored
-            {
-                get
-                {
-                    var that = this;
-                    return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
-                        .Where(f => IsFieldIgnoredAttribute(f) && !IsFieldInternal(f))
-                        .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
-                }
-            }
+            public IEnumerable<MetaField> LocalFields => UnfilteredLocalFields.Where(i => !i.IsIgnored && !i.IsInternal);
 
-            public IEnumerable<MetaField> LocalFieldsInternal
-            {
-                get
-                {
-                    var that = this;
-                    return this.TypeSymbol?.GetMembers().OfType<IFieldSymbol>()
-                        .Where(f => IsFieldInternal(f))
-                        .Select(f => new MetaField(that, f)) ?? ImmutableArray<MetaField>.Empty;
-                }
-            }
+            public IEnumerable<MetaField> LocalFieldsIgnored => UnfilteredLocalFields.Where(i => i.IsIgnored);
 
-            public IEnumerable<MetaField> AllLocalFields
+            public IEnumerable<MetaField> LocalFieldsInternal => UnfilteredLocalFields.Where(i => i.IsInternal);
+
+            public IEnumerable<MetaField> UnfilteredFields
             {
                 get
                 {
-                    foreach (var field in this.LocalFields)
+                    foreach (var field in this.UnfilteredInheritedFields)
                     {
                         yield return field;
                     }
 
-                    foreach (var field in this.LocalFieldsIgnored)
+                    foreach (var field in this.UnfilteredLocalFields)
                     {
                         yield return field;
                     }
                 }
             }
 
-            public IEnumerable<MetaField> AllFields
-            {
-                get
-                {
-                    foreach (var field in this.InheritedFields)
-                    {
-                        yield return field;
-                    }
+            public IEnumerable<MetaField> AllFields => UnfilteredFields.Where(i => !i.IsIgnored && !i.IsInternal);
 
-                    foreach (var field in this.LocalFields)
-                    {
-                        yield return field;
-                    }
-                }
-            }
-
-            public IEnumerable<MetaField> InheritedFields
+            public IEnumerable<MetaField> UnfilteredInheritedFields
             {
                 get
                 {
@@ -1614,34 +1637,35 @@ namespace ImmutableObjectGraph.Generation
                         yield break;
                     }
 
-                    foreach (var field in this.Ancestor.AllFields)
+                    foreach (var field in this.Ancestor.UnfilteredFields)
                     {
                         yield return field;
                     }
                 }
             }
 
-            public IEnumerable<IGrouping<int, MetaField>> AllFieldsByGeneration
-            {
-                get
-                {
-                    var that = this;
-                    var results = from generation in that.DefinedGenerations
-                                  from field in that.AllFields
-                                  where field.FieldGeneration <= generation
-                                  group field by generation into fieldsByGeneration
-                                  select fieldsByGeneration;
-                    bool observedDefaultGeneration = false;
-                    foreach (var result in results)
-                    {
-                        observedDefaultGeneration |= result.Key == 0;
-                        yield return result;
-                    }
+            public IEnumerable<MetaField> InheritedFields => UnfilteredInheritedFields.Where(i => !i.IsIgnored && !i.IsInternal);
 
-                    if (!observedDefaultGeneration)
-                    {
-                        yield return EmptyDefaultGeneration.Default;
-                    }
+            public IEnumerable<IGrouping<int, MetaField>> AllFieldsByGeneration => UnfilteredFieldsByGeneration(i => !i.IsIgnored && !i.IsInternal && !i.IsObsolete);
+
+            public IEnumerable<IGrouping<int, MetaField>> UnfilteredFieldsByGeneration(Func<MetaField, bool> filter)
+            {
+                var that = this;
+                var results = from generation in that.DefinedGenerations
+                              from field in that.UnfilteredFields.Where(filter)
+                              where field.FieldGeneration <= generation
+                              group field by generation into fieldsByGeneration
+                              select fieldsByGeneration;
+                bool observedDefaultGeneration = false;
+                foreach (var result in results)
+                {
+                    observedDefaultGeneration |= result.Key == 0;
+                    yield return result;
+                }
+
+                if (!observedDefaultGeneration)
+                {
+                    yield return EmptyDefaultGeneration.Default;
                 }
             }
 
@@ -1916,6 +1940,7 @@ namespace ImmutableObjectGraph.Generation
             private IFieldSymbol symbol;
             private IParameterSymbol paramSymbol;
             private ITypeSymbol paramType;
+            private IPropertySymbol property;
             private bool paramOptional;
 
             public MetaField(MetaType type, IFieldSymbol symbol)
@@ -1925,19 +1950,23 @@ namespace ImmutableObjectGraph.Generation
                 this.paramSymbol = null;
                 this.paramType = null;
                 this.paramOptional = false;
+                this.property = null;
             }
 
-            public MetaField(MetaType type, IParameterSymbol paramSymbol, ITypeSymbol paramType, bool paramOptional)
+            public MetaField(MetaType type, IParameterSymbol paramSymbol, ITypeSymbol paramType, bool paramOptional, IPropertySymbol property)
             {
                 this.metaType = type;
                 this.symbol = null;
                 this.paramSymbol = paramSymbol;
                 this.paramType = paramType;
                 this.paramOptional = paramOptional;
+                this.property = property;
             }
 
             public MetaType MetaType => this.metaType;
-            public string Name => this.symbol?.Name ?? this.paramSymbol.Name;
+            public string NameRaw => this.symbol?.Name ?? this.paramSymbol.Name;
+
+            public string Name => NameRaw.ToSafeName();
 
             public IdentifierNameSyntax NameAsProperty => SyntaxFactory.IdentifierName(this.Name.ToPascalCase());
 
@@ -1966,9 +1995,27 @@ namespace ImmutableObjectGraph.Generation
                 }
             }
 
-            public bool IsRequired => IsExternal ? !paramOptional : IsFieldRequired(this);
+            //public bool IsRequired => IsExternal ? !paramOptional : IsFieldRequired(this);
+            public bool IsRequired
+            {
+                get
+                {
+                    if (IsExternal)
+                        return !paramOptional;
+                    if (MetaType.Options.AllFieldsRequired)
+                        return !IsFieldOptional(symbol);
+                    else
+                        return IsFieldRequired(symbol);
+                }
+            }
 
-            public bool IsInternal => IsFieldInternal(this);
+            public bool IsIgnored => IsFieldIgnored(this.symbol);
+
+            public bool IsInternal => IsFieldInternal(this.symbol);
+
+            public bool IsObsolete => IsFieldObsolete((ISymbol)this.symbol ?? this.property);
+
+            public AttributeSyntax GetObsoleteAttribute() => this.metaType.Generator.GetObsoleteAttribute((ISymbol)this.symbol ?? this.property);
 
             public int FieldGeneration => GetFieldGeneration(this.symbol);//TODO param fix
 

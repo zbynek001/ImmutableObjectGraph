@@ -53,6 +53,11 @@
                             select SyntaxFactory.PropertyDeclaration(
                                 GetFullyQualifiedSymbolName(field.Type),
                                 field.Name.ToPascalCase())
+                                .To(i =>
+                                    field.IsObsolete ?
+                                        i.AddAttributeLists(
+                                            SyntaxFactory.AttributeList().AddAttributes(field.GetObsoleteAttribute())
+                                            ) : i)
                                 .WithAccessorList(SyntaxFactory.AccessorList(SyntaxFactory.SingletonList(
                                     SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                         .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)))))));
