@@ -1156,7 +1156,7 @@ namespace ImmutableObjectGraph.Generation
 
         private IEnumerable<FieldDeclarationSyntax> GetFields()
         {
-            return GetFields(i => !IsFieldIgnored(i) && !IsFieldInternal(i));
+            return GetFields(i => IsFieldValid(i) && !IsFieldIgnored(i) && !IsFieldInternal(i));
         }
 
         private IEnumerable<KeyValuePair<FieldDeclarationSyntax, VariableDeclaratorSyntax>> GetFieldVariables()
