@@ -174,7 +174,7 @@ namespace ImmutableObjectGraph.Generation
                 //innerMembers.Add(CreateValidateMethod());
             }
 
-            if (this.applyToMetaType.LocalFields.Any())
+            if (this.applyToMetaType.LocalFields.Any() || !this.applyToMetaType.HasAncestor)
                 innerMembers.Add(CreateInitializeDefaultTemplateMethod());
 
             innerMembers.Add(CreateInitializeIgnoredMethod());
