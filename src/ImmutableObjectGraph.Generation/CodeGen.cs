@@ -192,7 +192,7 @@ namespace ImmutableObjectGraph.Generation
                 innerMembers.AddRange(CreateWithMethods());
             }
 
-            innerMembers.AddRange((this.GetFieldVariables().Union(GetFieldVariablesInternal())).Select(fv => CreatePropertyForField(fv.Key, fv.Value)));
+            innerMembers.AddRange((this.GetFieldVariables().Union(GetFieldVariablesInternal())).Where(fv => !ContainsProperty(fv.Key, fv.Value)).Select(fv => CreatePropertyForField(fv.Key, fv.Value)));
 
             this.MergeFeature(new BuilderGen(this));
             this.MergeFeature(new DeltaGen(this));
@@ -243,6 +243,12 @@ namespace ImmutableObjectGraph.Generation
             outerMembers = this.mergedFeatures.Aggregate(outerMembers, (acc, feature) => feature.ProcessFinalGeneratedResult(acc));
 
             return Task.FromResult(outerMembers);
+        }
+
+        private bool ContainsProperty(FieldDeclarationSyntax field, VariableDeclaratorSyntax variable)
+        {
+            return this.applyTo.ChildNodes().OfType<PropertyDeclarationSyntax>()
+                .Where(p => p.Identifier.ValueText == variable.Identifier.ValueText.ToPascalCase()).Any();
         }
 
         private PropertyDeclarationSyntax CreatePropertyForField(FieldDeclarationSyntax field, VariableDeclaratorSyntax variable)
