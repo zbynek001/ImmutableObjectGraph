@@ -54,6 +54,8 @@ namespace ImmutableObjectGraph.Generation
         private static readonly IdentifierNameSyntax InitializeInternalMethodName = SyntaxFactory.IdentifierName("InitializeInternal");
         private static readonly IdentifierNameSyntax InitializeIgnoredMethodName = SyntaxFactory.IdentifierName("InitializeIgnored");
 
+        private static readonly IdentifierNameSyntax InitializeAfterDeserializationMethodName = SyntaxFactory.IdentifierName("InitializeAfterDeserialization");
+
         private static readonly IdentifierNameSyntax ValidateMethodName = SyntaxFactory.IdentifierName("Validate");
         private static readonly IdentifierNameSyntax SkipValidationParameterName = SyntaxFactory.IdentifierName("skipValidation");
         private static readonly AttributeSyntax DebuggerBrowsableNeverAttribute = SyntaxFactory.Attribute(
@@ -85,6 +87,9 @@ namespace ImmutableObjectGraph.Generation
 
         private INamedTypeSymbol optionalType;
         private INamedTypeSymbol obsoleteAttribute;
+        private INamedTypeSymbol protoContractAttribute;
+        private INamedTypeSymbol protoAfterDeserializationAttribute;
+
 
         private CodeGen(ClassDeclarationSyntax applyTo, CSharpCompilation compilation, IProgress<Diagnostic> progress, Options options, CancellationToken cancellationToken)
         {
@@ -102,6 +107,8 @@ namespace ImmutableObjectGraph.Generation
 
             optionalType = this.compilation.GetTypeByMetadataName(typeof(ImmutableObjectGraph.Optional<>).FullName);
             obsoleteAttribute = this.compilation.GetTypeByMetadataName("System.ObsoleteAttribute");
+            protoContractAttribute = this.compilation.GetTypeByMetadataName("ProtoBuf.ProtoContractAttribute");
+            protoAfterDeserializationAttribute = this.compilation.GetTypeByMetadataName("ProtoBuf.ProtoAfterDeserializationAttribute");
         }
 
         //public PluralizationService PluralService { get; set; }
@@ -176,6 +183,9 @@ namespace ImmutableObjectGraph.Generation
 
             if (this.applyToMetaType.LocalFields.Any() || !this.applyToMetaType.HasAncestor)
                 innerMembers.Add(CreateInitializeDefaultTemplateMethod());
+
+
+            innerMembers.AddRange(CreateInitializeAfterDeserializationMethod());
 
             innerMembers.Add(CreateInitializeIgnoredMethod());
             innerMembers.Add(CreateInitializeInternalMethod());
@@ -640,57 +650,57 @@ namespace ImmutableObjectGraph.Generation
                                     ))));
                 }
 
-                body = body.AddStatements(
-                    // this.InitializeIgnored(...);
-                    SyntaxFactory.ExpressionStatement(
-                        SyntaxFactory.InvocationExpression(
-                            Syntax.ThisDot(InitializeIgnoredMethodName),
-                            SyntaxFactory.ArgumentList(
-                                Syntax.JoinSyntaxNodes(
-                                    SyntaxKind.CommaToken,
-                                    this.applyToMetaType.LocalFieldsIgnored.Select(f =>
-                                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
-                                    ))))));
+                //body = body.AddStatements(
+                //    // this.InitializeIgnored(...);
+                //    SyntaxFactory.ExpressionStatement(
+                //        SyntaxFactory.InvocationExpression(
+                //            Syntax.ThisDot(InitializeIgnoredMethodName),
+                //            SyntaxFactory.ArgumentList(
+                //                Syntax.JoinSyntaxNodes(
+                //                    SyntaxKind.CommaToken,
+                //                    this.applyToMetaType.LocalFieldsIgnored.Select(f =>
+                //                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
+                //                    ))))));
 
-                body = body.AddStatements(
-                    // this.InitializeInternal(...);
-                    SyntaxFactory.ExpressionStatement(
-                        SyntaxFactory.InvocationExpression(
-                            Syntax.ThisDot(InitializeInternalMethodName),
-                            SyntaxFactory.ArgumentList(
-                                Syntax.JoinSyntaxNodes(
-                                    SyntaxKind.CommaToken,
-                                    this.applyToMetaType.LocalFieldsInternal.Select(f =>
-                                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
-                                    ))))));
+                //body = body.AddStatements(
+                //    // this.InitializeInternal(...);
+                //    SyntaxFactory.ExpressionStatement(
+                //        SyntaxFactory.InvocationExpression(
+                //            Syntax.ThisDot(InitializeInternalMethodName),
+                //            SyntaxFactory.ArgumentList(
+                //                Syntax.JoinSyntaxNodes(
+                //                    SyntaxKind.CommaToken,
+                //                    this.applyToMetaType.LocalFieldsInternal.Select(f =>
+                //                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
+                //                    ))))));
 
-                body = body.AddStatements(
-                    // this.InitializeAll(...);
-                    SyntaxFactory.ExpressionStatement(
-                        SyntaxFactory.InvocationExpression(
-                            Syntax.ThisDot(InitializePublicMethodName),
-                            SyntaxFactory.ArgumentList(
-                                Syntax.JoinSyntaxNodes(
-                                    SyntaxKind.CommaToken,
-                                    this.applyToMetaType.LocalFields.Select(f =>
-                                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
-                                    ))))));
+                //body = body.AddStatements(
+                //    // this.InitializePublic(...);
+                //    SyntaxFactory.ExpressionStatement(
+                //        SyntaxFactory.InvocationExpression(
+                //            Syntax.ThisDot(InitializePublicMethodName),
+                //            SyntaxFactory.ArgumentList(
+                //                Syntax.JoinSyntaxNodes(
+                //                    SyntaxKind.CommaToken,
+                //                    this.applyToMetaType.LocalFields.Select(f =>
+                //                        SyntaxFactory.Argument(null, SyntaxFactory.Token(SyntaxKind.RefKeyword), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.ThisExpression(), f.NameAsField))
+                //                    ))))));
 
-                body = body.AddStatements(
-                    // this.Initialize();
-                    SyntaxFactory.ExpressionStatement(
-                        SyntaxFactory.InvocationExpression(
-                            Syntax.ThisDot(InitializeMethodName),
-                            SyntaxFactory.ArgumentList())));
+                //body = body.AddStatements(
+                //    // this.Initialize();
+                //    SyntaxFactory.ExpressionStatement(
+                //        SyntaxFactory.InvocationExpression(
+                //            Syntax.ThisDot(InitializeMethodName),
+                //            SyntaxFactory.ArgumentList())));
 
-                if (!this.isAbstract)
-                {
-                    body = body.AddStatements(
-                        SyntaxFactory.ExpressionStatement(
-                            SyntaxFactory.InvocationExpression(
-                                Syntax.ThisDot(ValidateMethodName),
-                                SyntaxFactory.ArgumentList())));
-                }
+                //if (!this.isAbstract)
+                //{
+                //    body = body.AddStatements(
+                //        SyntaxFactory.ExpressionStatement(
+                //            SyntaxFactory.InvocationExpression(
+                //                Syntax.ThisDot(ValidateMethodName),
+                //                SyntaxFactory.ArgumentList())));
+                //}
 
                 var ctor = SyntaxFactory.ConstructorDeclaration(
                     this.applyTo.Identifier)
@@ -754,7 +764,7 @@ namespace ImmutableObjectGraph.Generation
                                 ))))));
 
             body = body.AddStatements(
-                // this.InitializeAll(...);
+                // this.InitializePublic(...);
                 SyntaxFactory.ExpressionStatement(
                     SyntaxFactory.InvocationExpression(
                         Syntax.ThisDot(InitializePublicMethodName),
@@ -1047,6 +1057,358 @@ namespace ImmutableObjectGraph.Generation
                     )
                 )
                 .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        }
+
+        private IEnumerable<MemberDeclarationSyntax> CreateInitializeAfterDeserializationMethod()
+        {
+            var CreateInitializeAfterDeserializationInternMethodName = SyntaxFactory.IdentifierName("CreateInitializeAfterDeserializationInternMethod");
+            var InitializeAfterDeserializationMethodName = SyntaxFactory.IdentifierName("InitializeAfterDeserialization");
+            var AfterDeserializationMethodName = SyntaxFactory.IdentifierName("AfterDeserialization");
+            var initializeAfterDeserializationInternFieldName = SyntaxFactory.IdentifierName("initializeAfterDeserializationIntern");
+
+            IdentifierNameSyntax dmName = SyntaxFactory.IdentifierName("dm");
+            IdentifierNameSyntax ilGeneratorName = SyntaxFactory.IdentifierName("ilGenerator");
+            IdentifierNameSyntax mName = SyntaxFactory.IdentifierName("m");
+
+            yield return SyntaxFactory.FieldDeclaration(
+                SyntaxFactory.VariableDeclaration(
+                    SyntaxFactory.IdentifierName("System.Action<" + this.applyTo.Identifier.ValueText + ">"),
+                    SyntaxFactory.SingletonSeparatedList(
+                        SyntaxFactory.VariableDeclarator(initializeAfterDeserializationInternFieldName.Identifier)
+                            .WithInitializer(SyntaxFactory.EqualsValueClause(SyntaxFactory.InvocationExpression(CreateInitializeAfterDeserializationInternMethodName, SyntaxFactory.ArgumentList())))
+                        )))
+                .AddModifiers(
+                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                    SyntaxFactory.Token(SyntaxKind.StaticKeyword),
+                    SyntaxFactory.Token(SyntaxKind.ReadOnlyKeyword))
+                .WithAttributeLists(SyntaxFactory.SingletonList(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(
+                     DebuggerBrowsableNeverAttribute))));
+
+            var body = SyntaxFactory.Block(
+                    //var dm = new DynamicMethod("InitializeAfterDeserializationIntern", null, new Type[] { typeof(RequestTracked) }, typeof(RequestTracked));
+                    SyntaxFactory.LocalDeclarationStatement(
+                        SyntaxFactory.VariableDeclaration(
+                            varType,
+                            SyntaxFactory.SingletonSeparatedList(
+                                SyntaxFactory.VariableDeclarator(
+                                    dmName.Identifier,
+                                    null,
+                                    SyntaxFactory.EqualsValueClause(
+                                        SyntaxFactory.ObjectCreationExpression(
+                                            SyntaxFactory.IdentifierName("System.Reflection.Emit.DynamicMethod"),
+                                            SyntaxFactory.ArgumentList(
+                                                Syntax.JoinSyntaxNodes(
+                                                    SyntaxKind.CommaToken,
+                                                    SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal("InitializeAfterDeserializationIntern"))),
+                                                    SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)),
+                                                    SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.ArrayCreationExpression(
+                                                        SyntaxFactory.ArrayType(SyntaxFactory.IdentifierName("System.Type[]")),
+                                                        SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, SyntaxFactory.SingletonSeparatedList<ExpressionSyntax>(
+                                                            SyntaxFactory.TypeOfExpression(SyntaxFactory.IdentifierName(this.applyTo.Identifier.ValueText))
+                                                            )))),
+                                                    SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.TypeOfExpression(SyntaxFactory.IdentifierName(this.applyTo.Identifier.ValueText)))
+                                                )), null)))))),
+
+                    //var ilGenerator = dm.GetILGenerator();
+                    SyntaxFactory.LocalDeclarationStatement(
+                        SyntaxFactory.VariableDeclaration(
+                            varType,
+                            SyntaxFactory.SingletonSeparatedList(
+                                SyntaxFactory.VariableDeclarator(
+                                    ilGeneratorName.Identifier,
+                                    null,
+                                    SyntaxFactory.EqualsValueClause(
+                                        SyntaxFactory.InvocationExpression(
+                                            SyntaxFactory.MemberAccessExpression(
+                                                SyntaxKind.SimpleMemberAccessExpression,
+                                                dmName,
+                                                SyntaxFactory.IdentifierName("GetILGenerator")))))))));
+
+            //this.InitializeIgnored();
+            body = body.AddStatements(EmitInitializeMethod(true, "InitializeIgnored", this.applyToMetaType.LocalFieldsIgnored).ToArray());
+
+            //this.InitializeInternal();
+            body = body.AddStatements(EmitInitializeMethod(false, "InitializeInternal", this.applyToMetaType.LocalFieldsInternal).ToArray());
+
+            //this.InitializePublic();
+            body = body.AddStatements(EmitInitializeMethod(false, "InitializePublic", this.applyToMetaType.LocalFields).ToArray());
+
+            //this.Initialize();
+            body = body.AddStatements(EmitInitializeMethod(false, "Initialize", Enumerable.Empty<MetaField>()).ToArray());
+
+            //this.Validate();
+            body = body.AddStatements(EmitInitializeMethod(false, "Validate", Enumerable.Empty<MetaField>()).ToArray());
+
+            body = body.AddStatements(
+                    //ilGenerator.Emit(OpCodes.Ret);
+                    SyntaxFactory.ExpressionStatement(
+                        SyntaxFactory.InvocationExpression(
+                            SyntaxFactory.MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                ilGeneratorName,
+                                SyntaxFactory.IdentifierName("Emit")),
+
+                                SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(
+                                    null,
+                                    NoneToken,
+                                    SyntaxFactory.MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        SyntaxFactory.IdentifierName("System.Reflection.Emit.OpCodes"),
+                                        SyntaxFactory.IdentifierName("Ret"))
+                                        ))))),
+
+                    //return (Action<RequestTracked>)caller.CreateDelegate(typeof(Action<RequestTracked>));
+                    SyntaxFactory.ReturnStatement(
+                        SyntaxFactory.CastExpression(
+                            SyntaxFactory.IdentifierName("System.Action<" + this.applyTo.Identifier.ValueText + ">"),
+                            SyntaxFactory.InvocationExpression(
+                                SyntaxFactory.MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    dmName,
+                                    SyntaxFactory.IdentifierName("CreateDelegate")),
+
+                                SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(
+                                    null,
+                                    NoneToken,
+                                    SyntaxFactory.TypeOfExpression(SyntaxFactory.IdentifierName("System.Action<" + this.applyTo.Identifier.ValueText + ">")))))))));
+
+            yield return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.IdentifierName("System.Action<" + this.applyTo.Identifier.ValueText + ">"),
+                CreateInitializeAfterDeserializationInternMethodName.Identifier)
+                .WithModifiers(SyntaxFactory.TokenList(
+                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword),
+                    SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
+                .WithBody(body);
+
+            yield return SyntaxFactory.MethodDeclaration(
+                SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                InitializeAfterDeserializationMethodName.Identifier)
+                .WithModifiers(SyntaxFactory.TokenList(
+                    SyntaxFactory.Token(SyntaxKind.PrivateKeyword)))
+                .WithBody(SyntaxFactory.Block(
+                    SyntaxFactory.ExpressionStatement(
+                        SyntaxFactory.InvocationExpression(
+                            initializeAfterDeserializationInternFieldName,
+                            SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(
+                                null,
+                                NoneToken,
+                                SyntaxFactory.ThisExpression())))
+                        ))));
+
+            if (protoContractAttribute != null && protoAfterDeserializationAttribute != null && applyToSymbol.GetAttributes().Where(i => i.AttributeClass == protoContractAttribute).Any())
+            {
+                yield return SyntaxFactory.MethodDeclaration(
+                    SyntaxFactory.PredefinedType(SyntaxFactory.Token(SyntaxKind.VoidKeyword)),
+                    AfterDeserializationMethodName.Identifier)
+                    .WithModifiers(SyntaxFactory.TokenList(
+                        SyntaxFactory.Token(SyntaxKind.PrivateKeyword)))
+                    .WithAttributeLists(SyntaxFactory.SingletonList(SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Attribute(
+                        GetFullyQualifiedSymbolName(protoAfterDeserializationAttribute)
+                        )))))
+                    .WithBody(SyntaxFactory.Block(
+                        SyntaxFactory.ExpressionStatement(
+                            SyntaxFactory.InvocationExpression(
+                                InitializeAfterDeserializationMethodName
+                                ))));
+            }
+        }
+
+        private IEnumerable<StatementSyntax> EmitInitializeMethod(bool first, string methodName, IEnumerable<MetaField> fields)
+        {
+            IdentifierNameSyntax ilGeneratorName = SyntaxFactory.IdentifierName("ilGenerator");
+            IdentifierNameSyntax mName = SyntaxFactory.IdentifierName("m");
+
+            //this.InitializePublic();
+            //var m = this.GetType().GetMethod("Test1", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(int).MakeByRefType() }, null)
+
+            var method = SyntaxFactory.InvocationExpression(
+                SyntaxFactory.MemberAccessExpression(
+                    SyntaxKind.SimpleMemberAccessExpression,
+                    SyntaxFactory.TypeOfExpression(
+                        SyntaxFactory.IdentifierName(this.applyTo.Identifier.ValueText)
+                        ),
+                    SyntaxFactory.IdentifierName("GetMethod")),
+                SyntaxFactory.ArgumentList(
+                    Syntax.JoinSyntaxNodes(
+                        SyntaxKind.CommaToken,
+                        SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(methodName))),
+                        SyntaxFactory.Argument(null, NoneToken,
+                            SyntaxFactory.BinaryExpression(SyntaxKind.BitwiseOrExpression,
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("System.Reflection.BindingFlags"), SyntaxFactory.IdentifierName("Instance")),
+                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("System.Reflection.BindingFlags"), SyntaxFactory.IdentifierName("NonPublic")))
+                            )
+
+                        ,
+                        SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)),
+                        SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.ArrayCreationExpression(
+                            SyntaxFactory.ArrayType(SyntaxFactory.IdentifierName("System.Type[]")),
+                            SyntaxFactory.InitializerExpression(SyntaxKind.ArrayInitializerExpression, SyntaxFactory.SeparatedList<ExpressionSyntax>(
+                                fields.Select(f =>
+                                {
+                                    return SyntaxFactory.InvocationExpression(
+                                        SyntaxFactory.MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            SyntaxFactory.TypeOfExpression(f.TypeSyntax),
+                                            SyntaxFactory.IdentifierName("MakeByRefType")));
+                                }))))),
+                        SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression))
+
+                    )));
+
+            if (first)
+            {
+                yield return SyntaxFactory.LocalDeclarationStatement(
+                    SyntaxFactory.VariableDeclaration(
+                        varType,
+                        SyntaxFactory.SingletonSeparatedList(
+                            SyntaxFactory.VariableDeclarator(
+                                mName.Identifier,
+                                null,
+                                SyntaxFactory.EqualsValueClause(
+                                    method
+                                    )))));
+            }
+            else
+            {
+                yield return SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.AssignmentExpression(
+                        SyntaxKind.SimpleAssignmentExpression,
+                        mName,
+                        method
+                    ));
+            }
+
+            var block = SyntaxFactory.Block(
+                //ilGenerator.Emit(OpCodes.Ldarg_0);
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        SyntaxFactory.MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            ilGeneratorName,
+                            SyntaxFactory.IdentifierName("Emit")),
+
+                            SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                                SyntaxFactory.Argument(
+                                    null,
+                                    NoneToken,
+                                    SyntaxFactory.MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        SyntaxFactory.IdentifierName("System.Reflection.Emit.OpCodes"),
+                                        SyntaxFactory.IdentifierName("Ldarg_0")
+                )))))));
+
+
+            if (fields.Any())
+            {
+                foreach (var f in fields)
+                {
+                    //ilGenerator.Emit(OpCodes.Ldarg_0);
+                    block = block.AddStatements(
+                        SyntaxFactory.ExpressionStatement(
+                            SyntaxFactory.InvocationExpression(
+                                SyntaxFactory.MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    ilGeneratorName,
+                                    SyntaxFactory.IdentifierName("Emit")),
+
+                                    SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
+                                        SyntaxFactory.Argument(
+                                            null,
+                                            NoneToken,
+                                            SyntaxFactory.MemberAccessExpression(
+                                                SyntaxKind.SimpleMemberAccessExpression,
+                                                SyntaxFactory.IdentifierName("System.Reflection.Emit.OpCodes"),
+                                                SyntaxFactory.IdentifierName("Ldarg_0"))
+                        ))))));
+
+                    //ilGenerator.Emit(OpCodes.Ldflda, this.GetType().GetField("sessionCounter", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+                    block = block.AddStatements(
+                        SyntaxFactory.ExpressionStatement(
+                            SyntaxFactory.InvocationExpression(
+                                SyntaxFactory.MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    ilGeneratorName,
+                                    SyntaxFactory.IdentifierName("Emit")),
+
+                                    SyntaxFactory.ArgumentList(
+                                        Syntax.JoinSyntaxNodes(
+                                            SyntaxKind.CommaToken,
+                                                SyntaxFactory.Argument(
+                                                    null,
+                                                    NoneToken,
+                                                    SyntaxFactory.MemberAccessExpression(
+                                                        SyntaxKind.SimpleMemberAccessExpression,
+                                                        SyntaxFactory.IdentifierName("System.Reflection.Emit.OpCodes"),
+                                                        SyntaxFactory.IdentifierName("Ldflda")
+                                                    )),
+                                                SyntaxFactory.Argument(
+                                                    null,
+                                                    NoneToken,
+                                                        SyntaxFactory.InvocationExpression(
+                                                            SyntaxFactory.MemberAccessExpression(
+                                                                SyntaxKind.SimpleMemberAccessExpression,
+                                                                SyntaxFactory.TypeOfExpression(
+                                                                    SyntaxFactory.IdentifierName(this.applyTo.Identifier.ValueText)
+                                                                    ),
+                                                                SyntaxFactory.IdentifierName("GetField")),
+                                                            SyntaxFactory.ArgumentList(
+                                                                Syntax.JoinSyntaxNodes(
+                                                                    SyntaxKind.CommaToken,
+                                                                    SyntaxFactory.Argument(null, NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(f.NameRaw))),
+                                                                    SyntaxFactory.Argument(null, NoneToken,
+                                                                        SyntaxFactory.BinaryExpression(
+                                                                            SyntaxKind.BitwiseOrExpression,
+                                                                            SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("System.Reflection.BindingFlags"), SyntaxFactory.IdentifierName("Instance")),
+                                                                            SyntaxFactory.BinaryExpression(
+                                                                                SyntaxKind.BitwiseOrExpression,
+                                                                                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("System.Reflection.BindingFlags"), SyntaxFactory.IdentifierName("NonPublic")),
+                                                                                SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, SyntaxFactory.IdentifierName("System.Reflection.BindingFlags"), SyntaxFactory.IdentifierName("Public"))
+                                                                                )
+                                                                        ))
+                                                            )))
+                                                ))))));
+                }
+            }
+
+
+            //ilGenerator.Emit(OpCodes.Call, m);
+            block = block.AddStatements(
+                SyntaxFactory.ExpressionStatement(
+                    SyntaxFactory.InvocationExpression(
+                        SyntaxFactory.MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            ilGeneratorName,
+                            SyntaxFactory.IdentifierName("Emit")),
+
+                            SyntaxFactory.ArgumentList(
+                                Syntax.JoinSyntaxNodes(
+                                    SyntaxKind.CommaToken,
+                                    SyntaxFactory.Argument(
+                                        null,
+                                        NoneToken,
+                                        SyntaxFactory.MemberAccessExpression(
+                                            SyntaxKind.SimpleMemberAccessExpression,
+                                            SyntaxFactory.IdentifierName("System.Reflection.Emit.OpCodes"),
+                                            SyntaxFactory.IdentifierName("Call"))
+                                            ),
+                                    SyntaxFactory.Argument(
+                                        null,
+                                        NoneToken,
+                                        mName
+                                        )
+                )))));
+
+
+
+            //if(m != null)
+            yield return SyntaxFactory.IfStatement(
+                SyntaxFactory.BinaryExpression(
+                    SyntaxKind.NotEqualsExpression,
+                    mName,
+                    SyntaxFactory.LiteralExpression(SyntaxKind.NullLiteralExpression)
+                ),
+                block
+                );
         }
 
         private MethodDeclarationSyntax CreateInitializeIgnoredMethod()
