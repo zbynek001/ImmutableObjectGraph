@@ -497,8 +497,7 @@ namespace ImmutableObjectGraph.Generation
             body = body.AddStatements(
                 this.applyToMetaType.LocalFields.Select(f =>
                 {
-                    //TODO: remove reflection
-                    var initializer = ((VariableDeclaratorSyntax)f.Symbol.GetType().GetTypeInfo().GetProperty("VariableDeclaratorNode").GetValue(f.Symbol)).Initializer?.Value;
+                    var initializer = GetInitializer(f);
                     if (initializer == null)
                         return null;
 
@@ -528,6 +527,13 @@ namespace ImmutableObjectGraph.Generation
                 method = method.AddModifiers(SyntaxFactory.Token(SyntaxKind.ProtectedKeyword));
 
             return method;
+        }
+
+        private ExpressionSyntax GetInitializer(MetaField f)
+        {
+            //TODO: remove reflection
+            var initializer = ((VariableDeclaratorSyntax)f.Symbol.GetType().GetTypeInfo().GetProperty("VariableDeclaratorNode").GetValue(f.Symbol)).Initializer?.Value;
+            return initializer;
         }
 
         private MemberDeclarationSyntax CreateGetDefaultTemplateMethod()
@@ -1018,10 +1024,24 @@ namespace ImmutableObjectGraph.Generation
                                         SyntaxFactory.Argument(
                                             SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(f.Name)),
                                             NoneToken,
-                                            f.IsObsolete?
-                                            (ExpressionSyntax)SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase()))
+                                            f.IsObsolete ?
+                                                //(ExpressionSyntax)SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase()))
+                                                GetInitializer(f).To(i =>
+                                                {
+                                                    if (i != null)
+                                                        return i;
+                                                    return SyntaxFactory.DefaultExpression(f.TypeSyntax);
+                                                })
                                             :
-                                            Syntax.OptionalGetValueOrDefault(SyntaxFactory.IdentifierName(f.Name), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase())))))))
+                                            Syntax.OptionalGetValueOrDefault(SyntaxFactory.IdentifierName(f.Name),
+                                                GetInitializer(f).To(i =>
+                                                {
+                                                    if (i != null)
+                                                        return i;
+                                                    return SyntaxFactory.DefaultExpression(f.TypeSyntax);
+                                                })
+                                            //SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase()))
+                                            )))))
                                     .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
                                     .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression))/*DoNotSkipValidationArgument*/),
                                 null)
