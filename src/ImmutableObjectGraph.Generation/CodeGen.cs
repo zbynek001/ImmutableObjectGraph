@@ -1031,7 +1031,7 @@ namespace ImmutableObjectGraph.Generation
                         .WithModifiers(SyntaxFactory.TokenList(
                             SyntaxFactory.Token(SyntaxKind.PublicKeyword),
                             SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
-                        .WithParameterList(CreateParameterList(fieldsGroup, ParameterStyle.OptionalOrRequired))
+                        .WithParameterList(CreateParameterList(fieldsGroup, ParameterStyle.Optional))
                         .WithBody(body);
 
                     if (this.applyToMetaType.Ancestors.Any(a => !a.TypeSymbol.IsAbstract && a.AllFieldsByGeneration.FirstOrDefault(g => g.Key == fieldsGroup.Key)?.Count() == fieldsGroup.Count()))
