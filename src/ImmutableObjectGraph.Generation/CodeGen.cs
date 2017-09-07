@@ -1018,7 +1018,10 @@ namespace ImmutableObjectGraph.Generation
                                         SyntaxFactory.Argument(
                                             SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(f.Name)),
                                             NoneToken,
-                                            Syntax.OptionalForIf(Syntax.OptionalGetValueOrDefault(SyntaxFactory.IdentifierName(f.Name), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase()))), false)))))
+                                            f.IsObsolete?
+                                            (ExpressionSyntax)SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase()))
+                                            :
+                                            Syntax.OptionalGetValueOrDefault(SyntaxFactory.IdentifierName(f.Name), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase())))))))
                                     .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
                                     .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression))/*DoNotSkipValidationArgument*/),
                                 null)

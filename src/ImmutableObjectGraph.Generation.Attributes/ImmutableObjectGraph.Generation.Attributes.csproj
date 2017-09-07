@@ -14,7 +14,7 @@
     <PackageProjectUrl>https://github.com/aarnott/immutableobjectgraph</PackageProjectUrl>
     <Copyright>Copyright © Andrew Arnott</Copyright>
     <PackageTags>immutable</PackageTags>
-    <Version>1.1.154-betaZ</Version>
+    <Version>1.1.155-betaZ</Version>
     <PublicRelease>true</PublicRelease>
   </PropertyGroup>
   <ItemGroup>
