@@ -43,6 +43,7 @@ namespace ImmutableObjectGraph.Generation
         private static readonly IdentifierNameSyntax CreateDefaultTemplateMethodName = SyntaxFactory.IdentifierName("CreateDefaultTemplate");
         private static readonly IdentifierNameSyntax InitializeDefaultTemplateMethodName = SyntaxFactory.IdentifierName("InitializeDefaultTemplate");
         private static readonly IdentifierNameSyntax CreateMethodName = SyntaxFactory.IdentifierName("Create");
+        private static readonly IdentifierNameSyntax CreateNewMethodName = SyntaxFactory.IdentifierName("CreateNew");
         private static readonly IdentifierNameSyntax NewIdentityMethodName = SyntaxFactory.IdentifierName("NewIdentity");
         private static readonly IdentifierNameSyntax WithFactoryMethodName = SyntaxFactory.IdentifierName("WithFactory");
         private static readonly IdentifierNameSyntax WithMethodName = SyntaxFactory.IdentifierName("With");
@@ -1002,6 +1003,44 @@ namespace ImmutableObjectGraph.Generation
                 }
 
                 yield return method;
+
+                {
+                    body = SyntaxFactory.Block();
+                    // return new TemplateType(...)
+                    body = body.AddStatements(
+                        SyntaxFactory.ReturnStatement(
+                            SyntaxFactory.ObjectCreationExpression(
+                                SyntaxFactory.IdentifierName(applyTo.Identifier),
+                                //CreateArgumentList(this.applyToMetaType.AllFields, ArgSource.OptionalArgumentOrProperty)
+                                SyntaxFactory.ArgumentList(Syntax.JoinSyntaxNodes(
+                                    SyntaxKind.CommaToken,
+                                    this.applyToMetaType.AllFields.Select(f =>
+                                        SyntaxFactory.Argument(
+                                            SyntaxFactory.NameColon(SyntaxFactory.IdentifierName(f.Name)),
+                                            NoneToken,
+                                            Syntax.OptionalForIf(Syntax.OptionalGetValueOrDefault(SyntaxFactory.IdentifierName(f.Name), SyntaxFactory.MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, DefaultInstancePropertyName, SyntaxFactory.IdentifierName(f.Name.ToPascalCase()))), false)))))
+                                    .PrependArgument(SyntaxFactory.Argument(SyntaxFactory.NameColon(IdentityParameterName), NoneToken, SyntaxFactory.InvocationExpression(NewIdentityMethodName, SyntaxFactory.ArgumentList())))
+                                    .AddArguments(SyntaxFactory.Argument(SyntaxFactory.NameColon(SkipValidationParameterName), NoneToken, SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression))/*DoNotSkipValidationArgument*/),
+                                null)
+                        )
+                    );
+
+                    method = SyntaxFactory.MethodDeclaration(
+                        SyntaxFactory.IdentifierName(applyTo.Identifier),
+                        GetGenerationalMethodName(CreateNewMethodName, fieldsGroup.Key).Identifier)
+                        .WithModifiers(SyntaxFactory.TokenList(
+                            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+                            SyntaxFactory.Token(SyntaxKind.StaticKeyword)))
+                        .WithParameterList(CreateParameterList(fieldsGroup, ParameterStyle.OptionalOrRequired))
+                        .WithBody(body);
+
+                    if (this.applyToMetaType.Ancestors.Any(a => !a.TypeSymbol.IsAbstract && a.AllFieldsByGeneration.FirstOrDefault(g => g.Key == fieldsGroup.Key)?.Count() == fieldsGroup.Count()))
+                    {
+                        method = Syntax.AddNewKeyword(method);
+                    }
+
+                    yield return method;
+                }
             }
         }
 
