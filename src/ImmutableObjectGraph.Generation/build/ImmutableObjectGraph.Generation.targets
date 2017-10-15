@@ -22,7 +22,7 @@
       ReferencePath="@(ReferencePath)"
       TargetName="GenerateCodeFromAttributes"
       GeneratorAssemblySearchPaths="@(GeneratorAssemblySearchPaths)"
-      IntermediateOutputDirectory="$(IntermediateOutputPath)">
+      IntermediateOutputDirectory="$(CodeGenerationRoslynIntermediateOutputPath)">
       <Output TaskParameter="GeneratedCompile" ItemName="GeneratedCodeFromAttribute_Compile" />
       <Output TaskParameter="GeneratedCompile" ItemName="FileWrites" />
       <Output TaskParameter="AdditionalWrittenFiles" ItemName="FileWrites" />

@@ -4,6 +4,7 @@
     <CodeGenerationRoslynToolsRootPath Condition=" '$(CodeGenerationRoslynToolsRootPath)' == '' ">$(MSBuildThisFileDirectory)</CodeGenerationRoslynToolsRootPath>
     <CodeGenerationRoslynToolsSubPath Condition=" '$(MSBuildRuntimeType)' == 'Core' ">netcoreapp1.0\</CodeGenerationRoslynToolsSubPath>
     <CodeGenerationRoslynToolsSubPath Condition=" '$(MSBuildRuntimeType)' != 'Core' ">net46\</CodeGenerationRoslynToolsSubPath>
+    <CodeGenerationRoslynIntermediateOutputPath Condition=" '$(CodeGenerationRoslynIntermediateOutputPath)' == '' ">$(IntermediateOutputPath)</CodeGenerationRoslynIntermediateOutputPath>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
